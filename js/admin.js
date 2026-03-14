@@ -641,17 +641,23 @@ window.quickMark = quickMark;
 
 async function markAsFromModal(status) {
   if (!currentModalItem) return;
-  const btnId = status === 'resolved' ? 'btnResolve' : 'btnContactedMod';
+  const btnId = status === 'resolved' ? 'btnResolve' : (status === 'contacted' ? 'btnContactedMod' : 'btnMarkNew');
   const btn = document.getElementById(btnId);
   if (btn) { btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'; btn.disabled = true; }
+  
   localUpdateStatus(currentModalItem.id, currentModalItem.collection, status);
   filterAndRender();
   renderRecentTable(window.enquiriesData.slice(0, 6));
+  
   const sb = document.getElementById('mod-status-badge');
   if (sb) { sb.textContent = status.toUpperCase(); sb.className = `status-badge ${statusClass(status)}`; }
+  
   await updateFirebaseStatus(currentModalItem.collection, currentModalItem.id, status);
-  window.showToast(`Marked as ${status}!`, 'success');
-  if (btn) { btn.innerHTML = '<i class="bx bx-check"></i> Done'; }
+  window.showToast(`Status updated to ${status}!`, 'success');
+  
+  // Re-run modal button logic to refresh visibility/states
+  const item = window.enquiriesData.find(i => i.id === currentModalItem.id && i.collection === currentModalItem.collection);
+  if (item) openItemModal(item);
 }
 window.markAs = markAsFromModal;
 
@@ -692,7 +698,17 @@ function openItemModal(item) {
     btnR.innerHTML = item.status === 'resolved' ? '<i class="bx bx-check"></i> Resolved' : '<i class="bx bx-check"></i> Resolve';
   }
   const btnC = document.getElementById('btnContactedMod');
-  if (btnC) { btnC.disabled = false; btnC.innerHTML = '<i class="bx bx-phone-call"></i> Mark Contacted'; }
+  if (btnC) { 
+    btnC.disabled = item.status === 'contacted'; 
+    btnC.innerHTML = item.status === 'contacted' ? '<i class="bx bx-check"></i> Contacted' : '<i class="bx bx-phone-call"></i> Mark Contacted'; 
+  }
+
+  const btnN = document.getElementById('btnMarkNew');
+  if (btnN) {
+    btnN.style.display = (item.status && item.status !== 'new') ? 'flex' : 'none';
+    btnN.disabled = false;
+    btnN.innerHTML = "<i class='bx bx-undo'></i> Mark as New";
+  }
 
   openModal('enquiryModal');
 }
