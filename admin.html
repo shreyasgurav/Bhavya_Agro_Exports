@@ -139,7 +139,7 @@
           <p class="text-sm text-slate-500 mt-0.5" id="currentDateDisplay"></p>
         </div>
         <div class="flex gap-2">
-          <button onclick="generateReport()" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition flex items-center gap-2 shadow-sm"><i class='bx bx-download'></i> Export CSV</button>
+          <button onclick="generateReport()" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition flex items-center gap-2 shadow-sm"><i class='bx bxs-file-export'></i> Export Excel</button>
           <button onclick="openMakeQuoteModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm"><i class='bx bx-plus'></i> New Quote</button>
         </div>
       </div>
@@ -201,7 +201,7 @@
     <div id="dash-enquiries" class="tab-content max-w-7xl mx-auto pb-10">
       <div class="flex justify-between items-end mb-5">
         <div><h2 class="text-2xl font-bold text-slate-900">All Enquiries</h2><p class="text-sm text-slate-500">All submissions combined — quotations & contact messages</p></div>
-        <button onclick="exportTableCSV('fullEnquiriesTable','enquiries')" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2 shadow-sm"><i class='bx bx-export'></i> Export</button>
+        <button onclick="exportTableExcel('fullEnquiriesTable','enquiries')" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2 shadow-sm"><i class='bx bxs-file-export'></i> Export Excel</button>
       </div>
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-center">
         <div class="relative"><i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400'></i><input type="text" id="filterSearch" placeholder="Search..." class="border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm w-60 outline-none focus:border-blue-500"></div>
@@ -431,6 +431,7 @@
   </div>
 </div>
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script type="module" src="js/admin.js"></script>
 <script>
   // Date display
@@ -484,22 +485,31 @@
   // ── REPORT GENERATION ──
   window.generateReport = function() {
     if(window.enquiriesData && window.enquiriesData.length) {
-      exportTableCSV('fullEnquiriesTableWrap','vyankyaa-report');
+      exportTableExcel('fullEnquiriesTableWrap','vyankyaa-report');
     } else { showToast('No data to export yet', 'info'); }
   };
 
-  window.exportTableCSV = function(tableId, name) {
-    const rows = [];
-    rows.push(['Date','Type','Customer','Email','Phone','City','Product/Subject','Status']);
+  window.exportTableExcel = function(tableId, name) {
+    const data = [];
+    data.push(['Date','Type','Customer','Email','Phone','City','Product/Subject','Status']);
     (window.enquiriesData || []).forEach(d => {
-      rows.push([ d.timestamp ? new Date(d.timestamp.seconds*1000).toLocaleDateString() : '', d.collection, d.name||'', d.email||'', d.phone||'', d.city||'', d.product||d.enquiryType||'', d.status||'pending' ]);
+      data.push([ 
+        d.timestamp ? new Date(d.timestamp.seconds*1000).toLocaleDateString() : '', 
+        d.collection === 'quotations' ? 'Quotation' : 'Message', 
+        d.name||'', 
+        d.email||'', 
+        d.phone||'', 
+        d.city||'', 
+        d.productInterest || d.product || d.enquiryType || '', 
+        (d.status||'pending').toUpperCase() 
+      ]);
     });
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = name + '-' + Date.now() + '.csv';
-    a.click();
-    showToast('CSV downloaded!', 'success');
+    
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Enquiries");
+    XLSX.writeFile(wb, `${name}-${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Excel report downloaded!', 'success');
   };
 
   // ── SETTINGS ──
