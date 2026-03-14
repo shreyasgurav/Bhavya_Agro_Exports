@@ -1,15 +1,13 @@
 /*
- * EMAILJS SETUP — COMPLETE BEFORE GOING LIVE:
- * 1. Go to https://emailjs.com and sign up free
- * 2. Add Gmail service → copy Service ID → replace YOUR_SERVICE_ID
- * 3. Create email template → copy Template ID → replace YOUR_TEMPLATE_ID
- * 4. Account → Public Key → replace YOUR_PUBLIC_KEY
- * Template variables: {{from_name}}, {{company}}, {{email}}, {{phone}}, {{city}}, {{enquiry_type}}, {{product_interest}}, {{message}}
+ * CONTACT FORM — EMAILJS + FIREBASE INTEGRATION
  */
+import { db, collection, addDoc, serverTimestamp } from './firebase-config.js';
 
 (function() {
     // Initialise EmailJS with Public Key
-    emailjs.init('1f0OHlEQ6aegRMz2C');
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init('1f0OHlEQ6aegRMz2C');
+    }
 
     const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
@@ -48,7 +46,7 @@
 
     const submitBtn = document.getElementById('submitBtn');
     
-    // Override the inline onclick from HTML
+    // Override the inline onclick or define globally
     window.handleSubmit = async function() {
         let isValid = true;
         const name = document.getElementById('f-name').value.trim();
@@ -75,30 +73,49 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span>Sending... <i class="bx bx-loader-alt bx-spin"></i></span>';
 
-        const form = contactForm;
         const templateParams = {
-          name: form.querySelector('[name="name"]').value,
-          company: form.querySelector('[name="company"]').value,
-          email: form.querySelector('[name="email"]').value,
-          phone: form.querySelector('[name="phone"]').value,
-          city: form.querySelector('[name="city"]').value,
-          enquiry_type: form.querySelector('[name="enquiry_type"]').value,
-          product_interest: form.querySelector('[name="product_interest"]').value,
-          message: form.querySelector('[name="message"]').value,
+          name: name,
+          company: company,
+          email: email,
+          phone: phone,
+          city: city,
+          enquiry_type: type,
+          product_interest: product,
+          message: message,
           time: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
         };
 
+        const firebaseData = {
+          name,
+          company,
+          email,
+          phone,
+          city,
+          enquiryType: type,
+          productInterest: product,
+          message,
+          timestamp: serverTimestamp(),
+          formType: 'contact_page',
+          status: 'new'
+        };
+
         try {
-            // Un-comment after putting actual keys
-            await emailjs.send('service_jniflqr', 'template_78x6aoq', templateParams);
+            // 1. Send Email (EmailJS)
+            if (typeof emailjs !== 'undefined') {
+                await emailjs.send('service_jniflqr', 'template_78x6aoq', templateParams);
+            }
+
+            // 2. Save to Firebase (Backup/Admin)
+            await addDoc(collection(db, "contacts"), firebaseData);
             
             // Success State
             submitBtn.style.display = 'none';
             document.getElementById('formSuccess').style.display = 'block';
             document.getElementById('formSuccess').scrollIntoView({ behavior:'smooth', block:'center' });
         } catch (error) {
-            console.error('EmailJS Error:', error);
+            console.error('Submission Error:', error);
             const globalError = document.createElement('p');
+            globalError.className = 'error-msg';
             globalError.style.color = 'var(--clay)';
             globalError.style.fontSize = '12px';
             globalError.style.marginTop = '12px';

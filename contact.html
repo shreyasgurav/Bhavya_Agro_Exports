@@ -20,7 +20,7 @@
 <script src="https://unpkg.com/lucide@latest" defer></script>
 <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
-<script src="js/contact.js" defer></script>
+<script src="js/contact.js" type="module"></script>
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"/>
 <style>
@@ -297,62 +297,6 @@
 
 <div id="footer-placeholder"></div>
 <script src="js/main.js"></script>
-<script type="module">
-  import { db, collection, addDoc, serverTimestamp } from './js/firebase-config.js';
-
-  window.handleSubmit = async function() {
-    const name = document.getElementById('f-name').value.trim();
-    const company = document.getElementById('f-company').value.trim();
-    const email = document.getElementById('f-email').value.trim();
-    const phone = document.getElementById('f-phone').value.trim();
-    const city = document.getElementById('f-city').value.trim();
-    const type = document.getElementById('f-type').value;
-    const product = document.getElementById('f-product').value;
-    const message = document.getElementById('f-message').value.trim();
-
-    if (!name || !email || !city || !message) {
-      alert('Please fill in all required fields (*).');
-      return;
-    }
-
-    const submitBtn = document.getElementById('submitBtn');
-    const originalBtnText = submitBtn.innerHTML;
-    
-    // Loading State
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>Sending... <i class="bx bx-loader-alt bx-spin"></i></span>';
-
-    const contactData = {
-      name,
-      company,
-      email,
-      phone,
-      city,
-      enquiryType: type,
-      productInterest: product,
-      message,
-      timestamp: serverTimestamp(),
-      formType: 'contact_page',
-      status: 'new'
-    };
-
-    try {
-      await addDoc(collection(db, "contacts"), contactData);
-      
-      // Success State
-      submitBtn.style.display = 'none';
-      document.getElementById('formSuccess').style.display = 'block';
-      document.getElementById('formSuccess').scrollIntoView({ behavior:'smooth', block:'center' });
-      
-      // Optionally reset fields (already hidden form area basically)
-    } catch (e) {
-      console.error("Error sending message: ", e);
-      alert('Oops! We encountered an error while sending your message. Please try again or use the direct contact details provided.');
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalBtnText;
-    }
-  }
-</script>
 
 <script>
   loadComponent('nav-placeholder', 'components/nav.html');

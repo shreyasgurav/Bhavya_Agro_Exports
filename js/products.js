@@ -1,10 +1,11 @@
 /*
- * QUOTE REQUEST MODAL — EMAILJS INTEGRATION
+ * QUOTE REQUEST MODAL — EMAILJS + FIREBASE INTEGRATION
  */
+import { db, collection, addDoc, serverTimestamp } from './firebase-config.js';
 
 (function() {
     // Shared EmailJS Init - Guard against double init
-    if (!window.emailjsInitialized) {
+    if (!window.emailjsInitialized && typeof emailjs !== 'undefined') {
         emailjs.init('1f0OHlEQ6aegRMz2C');
         window.emailjsInitialized = true;
     }
@@ -78,9 +79,27 @@
             time: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
         };
 
+        const firebaseData = {
+          name,
+          phone,
+          email,
+          productInterest: product,
+          company,
+          city,
+          message: message || 'N/A',
+          timestamp: serverTimestamp(),
+          formType: 'quotation_modal',
+          status: 'new'
+        };
+
         try {
-            // Un-comment after putting actual keys
-            await emailjs.send('service_jniflqr', 'template_78x6aoq', templateParams);
+            // 1. Send Email (EmailJS)
+            if (typeof emailjs !== 'undefined') {
+                await emailjs.send('service_jniflqr', 'template_78x6aoq', templateParams);
+            }
+
+            // 2. Save to Firebase (Backup/Admin)
+            await addDoc(collection(db, "quotations"), firebaseData);
             
             // Success Logic
             const content = quotationForm.parentElement;
@@ -104,7 +123,7 @@
             }, 3000);
 
         } catch (error) {
-            console.error('EmailJS Error:', error);
+            console.error('Submission Error:', error);
             const globalError = document.createElement('p');
             globalError.style.color = 'var(--clay)';
             globalError.style.fontSize = '12px';

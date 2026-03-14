@@ -12,6 +12,12 @@ function loadComponent(id, url, callback) {
     .then(r => r.text())
     .then(html => {
       el.outerHTML = html;
+      
+      // Re-initialize icon libraries for dynamic content
+      if (typeof feather !== 'undefined') feather.replace();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      if (typeof boxicons !== 'undefined' && boxicons.init) boxicons.init();
+
       if (callback) callback();
       if (id === 'nav-placeholder') initNav();
     })
