@@ -123,39 +123,38 @@
 .quotation-modal {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 10000;
-  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+  padding: 40px 20px;
+  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.5);
+  scrollbar-width: thin;
 }
 
 .quotation-modal.active {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
+  position: fixed;
+  inset: 0;
+  z-index: -1;
 }
 
 .modal-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   background: var(--cream);
   padding: 40px;
   border-radius: 8px;
-  width: 90%;
+  width: 100%;
   max-width: 500px;
   box-shadow: 0 20px 60px rgba(44, 26, 14, 0.15);
+  margin: auto;
+  animation: slideUp 0.4s ease;
 }
 /* FLOATING ACTION BUTTON */
 .fab-quote {
@@ -319,11 +318,11 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translate(-50%, -40%);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
   }
 }
 
