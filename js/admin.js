@@ -44,6 +44,24 @@ async function loadAdminProducts() {
   renderProductsTable();
 }
 function getAdminProducts() { return window._adminProducts; }
+function populateCategorySelect() {
+  const sel = document.getElementById('prodCategorySelect');
+  if (!sel) return;
+  const products = getAdminProducts();
+  const cats = new Map();
+  // Standard defaults
+  cats.set('oils', 'Premium Oils');
+  cats.set('grains', 'Grains & Sugar');
+  cats.set('cakes', 'Oil Seed Cakes');
+  cats.set('spices', 'Spices');
+  cats.set('seeds', 'Seeds');
+  // Add any custom ones from products
+  products.forEach(p => { if (p.category) cats.set(p.category, p.categoryLabel || p.category); });
+  
+  sel.innerHTML = '<option value="" disabled selected>Select category...</option>' +
+    Array.from(cats.entries()).map(([key, label]) => `<option value="${esc(key)}" data-label="${esc(label)}">${esc(label)}</option>`).join('') +
+    '<option value="NEW_CAT" class="font-bold text-emerald-600">+ Add New Category...</option>';
+}
 
 // ════════════════════════════════════════════════
 // AUTHENTICATION
@@ -195,6 +213,22 @@ document.addEventListener('click', function(e) {
     case 'new-quote': openMakeQuoteModal(null); break;
     case 'add-product': openAddProductModal(); break;
     case 'sign-out': if(window.firebaseSignOut) window.firebaseSignOut(); break;
+  }
+});
+
+// Category Dropdown Logic
+document.getElementById('prodCategorySelect')?.addEventListener('change', function() {
+  const wrap = document.getElementById('newCategoryWrap');
+  if (this.value === 'NEW_CAT') {
+    wrap.style.display = 'block';
+    document.getElementById('prodCategory').value = '';
+    document.getElementById('prodCatLabel').value = '';
+    document.getElementById('prodCategory').focus();
+  } else {
+    wrap.style.display = 'none';
+    const opt = this.options[this.selectedIndex];
+    document.getElementById('prodCategory').value = this.value;
+    document.getElementById('prodCatLabel').value = opt.getAttribute('data-label') || '';
   }
 });
 
@@ -534,6 +568,24 @@ window.editProduct = function(id) {
   document.getElementById('prodTag').value        = p.tag || '';
   document.getElementById('prodStatus').value     = p.status || 'available';
   document.getElementById('prodOrder').value      = p.order || 99;
+  
+  populateCategorySelect();
+  const sel = document.getElementById('prodCategorySelect');
+  if (sel) {
+    const cat = p.category || '';
+    // Check if category exists in dropdown
+    let exists = false;
+    for(let i=0; i<sel.options.length; i++) { if(sel.options[i].value === cat) { exists = true; break; } }
+    
+    if (exists) {
+      sel.value = cat;
+      document.getElementById('newCategoryWrap').style.display = 'none';
+    } else {
+      sel.value = 'NEW_CAT';
+      document.getElementById('newCategoryWrap').style.display = 'block';
+    }
+  }
+
   openModal('productModal');
 };
 
@@ -656,6 +708,9 @@ window.openAddProductModal = function() {
     const el = document.getElementById(id); if(el) el.value = '';
   });
   const ps = document.getElementById('prodStatus'); if(ps) ps.value = 'available';
+  populateCategorySelect();
+  const sel = document.getElementById('prodCategorySelect'); if(sel) sel.value = '';
+  document.getElementById('newCategoryWrap').style.display = 'none';
   openModal('productModal');
 };
 

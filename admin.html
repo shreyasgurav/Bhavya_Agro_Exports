@@ -409,35 +409,33 @@
     </div>
     <div class="p-6 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)] min-h-[300px]">
       <input type="hidden" id="prodEditId">
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Name</label><input type="text" id="prodName" placeholder="e.g. Cold Pressed Safflower Oil" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400"></div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category Key</label>
-          <input type="text" id="prodCategory" list="category-suggestions" placeholder="oils / grains / cakes / spices" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400">
-          <datalist id="category-suggestions">
-            <option value="oils"></option>
-            <option value="grains"></option>
-            <option value="cakes"></option>
-            <option value="spices"></option>
-            <option value="seeds"></option>
-          </datalist>
-        </div>
-      </div>
+      <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Name</label><input type="text" id="prodName" placeholder="e.g. Cold Pressed Safflower Oil" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400"></div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category Label (display)</label>
-          <input type="text" id="prodCatLabel" list="category-label-suggestions" placeholder="e.g. Premium Oils" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400">
-          <datalist id="category-label-suggestions">
-            <option value="Premium Oils"></option>
-            <option value="Grains & Sugar"></option>
-            <option value="Oil Seed Cakes"></option>
-            <option value="Spices"></option>
-            <option value="Seeds"></option>
-          </datalist>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+          <select id="prodCategorySelect" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 bg-white">
+            <option value="" disabled selected>Select category...</option>
+            <option value="NEW_CAT">+ Add New Category...</option>
+          </select>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Price</label>
           <input type="text" id="prodPrice" placeholder="On Request or ₹85,000 / MT" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400">
+        </div>
+      </div>
+
+      <!-- New Category Hidden Fields -->
+      <div id="newCategoryWrap" style="display:none;" class="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-3">
+        <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">New Category Details</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category Key (ID)</label>
+            <input type="text" id="prodCategory" placeholder="e.g. grains" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Display Label</label>
+            <input type="text" id="prodCatLabel" placeholder="e.g. Premium Grains" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400">
+          </div>
         </div>
       </div>
       <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label><textarea id="prodDesc" rows="2" placeholder="Short product description shown on the website..." class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 resize-none"></textarea></div>
