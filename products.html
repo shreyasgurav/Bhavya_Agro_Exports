@@ -472,7 +472,7 @@
 <script src="js/products.js" type="module"></script>
 <script type="module">
   import { fetchPublicProducts, FALLBACK_PRODUCTS, sortProducts } from './js/products-service.js';
-  import { db, collection, addDoc, serverTimestamp } from './js/firebase-config.js';
+  import { db, collection, addDoc, serverTimestamp, onSnapshot } from './js/firebase-config.js';
 
   // ── STATE ──
   let allProducts     = [];
@@ -499,7 +499,8 @@
     });
 
     if (!products.length) {
-      catalog.innerHTML = '<div style="text-align:center;padding:80px 0;font-family:\'DM Sans\';color:var(--light-text);">No products currently available. Please check back soon.</div>';
+      catalog.innerHTML = '<p style="text-align:center;padding:60px 20px;font-family:\'DM Sans\';color:var(--light-text);font-size:1.1rem;">Product catalogue is being updated. Please check back shortly.</p>';
+      if (filterEl) filterEl.innerHTML = '';
       return;
     }
 
@@ -521,7 +522,7 @@
     }
 
     // Render each category group
-    const ordinalWords = ['01','02','03','04','05','06','07','08'];
+    const ordinalWords = ['01','02','03','04','05','06','07','08', '09', '10', '11', '12', '13', '14', '15'];
     catalog.innerHTML = catOrder
       .filter(catKey => grouped[catKey] && grouped[catKey].length > 0)
       .map((catKey, i) => {
@@ -543,6 +544,16 @@
             </div>
           </div>`;
       }).join('');
+
+    // Re-apply active filter if one was selected
+    if (activeFilter !== 'all') {
+      applyFilter();
+      const activeBtn = filterEl?.querySelector(`[data-filter="${activeFilter}"]`);
+      if (activeBtn) {
+        filterEl.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        activeBtn.classList.add('active');
+      }
+    }
   }
 
   function escHtml(s) {
@@ -642,41 +653,48 @@
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuotationModal(); });
 
-  // ── INIT — INSTANT RENDER ───────────────────────────────────────────────────
+  // ── INIT — REAL-TIME SYNC ───────────────────────────────────────────────────
   // Step 1: Render fallback immediately
   renderCatalog(FALLBACK_PRODUCTS);
   
-  // Step 2: Fetch fresh data and update
-  fetchPublicProducts()
-    .then(products => {
-      allProducts = products;
-      renderCatalog(products);
-      // Give the browser one frame to paint the DOM, then make all cards visible.
-      // Dynamic cards can't rely on main.js IntersectionObserver (which ran before they existed).
-      requestAnimationFrame(() => {
-        // Immediately show cards above the fold
-        document.querySelectorAll('#productCatalog .reveal').forEach((el, i) => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight + 400) {
-            // Stagger by 60ms per card for a smooth cascade
-            setTimeout(() => el.classList.add('visible'), i * 60);
-          } else {
-            // For cards below fold, use a real IntersectionObserver
-            const obs = new IntersectionObserver(entries => {
-              entries.forEach(e => {
-                if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-              });
-            }, { threshold: 0.08 });
-            obs.observe(el);
-          }
-        });
-      });
-    })
-    .catch(err => {
-      console.error('Failed to load products:', err);
-      const loading = document.getElementById('productsLoadingState');
-      if (loading) loading.innerHTML = '<p style="text-align:center;padding:60px;font-family:\'DM Sans\';color:var(--clay);">Unable to load products. Please refresh the page.</p>';
+  // Step 2: Listen to Firestore real-time updates
+  onSnapshot(collection(db, 'products'), (snapshot) => {
+    let freshProducts = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.status !== 'unavailable') {
+        freshProducts.push({ id: doc.id, ...data });
+      }
     });
+    
+    // Sort preserving category order
+    freshProducts = sortProducts(freshProducts);
+    allProducts = freshProducts;
+    
+    // Update UI
+    renderCatalog(freshProducts);
+    
+    // Apply animation cascade
+    requestAnimationFrame(() => {
+      document.querySelectorAll('#productCatalog .reveal:not(.visible)').forEach((el, i) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 400) {
+          setTimeout(() => el.classList.add('visible'), i * 60);
+        } else {
+          const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+              if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+            });
+          }, { threshold: 0.08 });
+          obs.observe(el);
+        }
+      });
+    });
+  }, (err) => {
+    console.error('Failed to load products sync:', err);
+    const catalog = document.getElementById('productCatalog');
+    if (catalog) catalog.innerHTML = '<p style="text-align:center;padding:60px 20px;font-family:\'DM Sans\';color:var(--light-text);font-size:1.1rem;">Product catalogue is being updated. Please check back shortly.</p>';
+  });
 </script>
 
 <script>
