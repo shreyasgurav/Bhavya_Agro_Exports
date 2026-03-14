@@ -529,8 +529,8 @@ function renderProductsTable() {
   // 0. Filter by Search
   if (query) {
     products = products.filter(p => 
-      p.name.toLowerCase().includes(query) || 
-      (p.categoryLabel||'').toLowerCase().includes(query)
+      (p.name || '').toLowerCase().includes(query) || 
+      (p.categoryLabel || '').toLowerCase().includes(query)
     );
   }
   
@@ -616,6 +616,7 @@ function renderProductsTable() {
   // 4. Initialize Drag & Drop
   initSortable();
 }
+window.renderProductsTable = renderProductsTable;
 
 function initSortable() {
   if (typeof Sortable === 'undefined') return;
