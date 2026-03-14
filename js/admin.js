@@ -745,9 +745,30 @@ window.replyTo = (o) => doReply(o.email, o.name, o.subject);
 window.openMakeQuoteModal = function(item) {
   const qe = document.getElementById('qEmail');
   const qp = document.getElementById('qProduct');
+  
+  // Populate dropdown first
+  if (qp) {
+    const prods = getAdminProducts() || [];
+    qp.innerHTML = '<option value="" disabled selected>Select a product...</option>' + 
+      prods.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+  }
+
   if (item) {
     if (qe) qe.value = item.email  || '';
-    if (qp) qp.value = item.product|| '';
+    if (qp) {
+      const prodName = item.productInterest || item.product || '';
+      // If we have a product name, set it. If it doesn't exist in the dropdown, the browser won't select it.
+      qp.value = prodName;
+      
+      // Fallback: if product from enquiry isn't in our curated list, add it temporarily or just leave as is
+      if (prodName && qp.value !== prodName) {
+        const opt = document.createElement('option');
+        opt.value = prodName;
+        opt.textContent = prodName;
+        qp.appendChild(opt);
+        qp.value = prodName;
+      }
+    }
   } else {
     if (qe) qe.value = '';
     if (qp) qp.value = '';
