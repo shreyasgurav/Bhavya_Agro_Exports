@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Sitemap: https://vyankyaa-foods.vercel.app/sitemap.xml

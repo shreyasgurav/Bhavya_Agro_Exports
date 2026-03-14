@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    VYANKYAA FOODS — SHARED JS
-═══════════════════════════════════════════ */
+   ═══════════════════════════════════════════ */
 
 /**
  * LOAD COMPONENTS (NAV, FOOTER)
@@ -97,6 +97,13 @@ document.addEventListener('click', (e) => {
   }
 });
 
+/* ── PRE-FETCH PRODUCTS ── */
+// Only try if not on admin page (to avoid module conflicts)
+if (!window.location.pathname.includes('admin')) {
+  import('./products-service.js')
+    .then(m => m.prefetchProducts())
+    .catch(e => console.warn('Prefetch skipped:', e));
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize nav if it's already in DOM (e.g. static pages)
@@ -147,11 +154,4 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.display = (cat === 'all' || card.dataset.category === cat) ? '' : 'none';
     });
   });
-
-  /* ── PRE-FETCH PRODUCTS ── */
-  // Only try if not on admin page (to avoid module conflicts)
-  if (!window.location.pathname.includes('/admin')) {
-    import('./products-service.js').then(m => m.prefetchProducts()).catch(e => console.warn('Prefetch skipped:', e));
-  }
 });
-

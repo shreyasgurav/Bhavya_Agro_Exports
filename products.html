@@ -3,11 +3,23 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Products — Vyankyaa Foods</title>
+<title>Our Products | Vyankyaa Foods — Premium Agricultural Exports</title>
+<meta name="description" content="Explore our range of premium Safflower oil, Sunflower oil, cakes, and grains. Quality certified agricultural exports from India.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vyankyaa Foods">
+<meta property="og:image" content="/images/og-cover.jpg">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://vyankyaa-foods.vercel.app/products.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="icon" type="image/png" href="/images/favicon.png">
+<link rel="apple-touch-icon" href="/images/favicon.png">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/feather-icons"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+<script src="https://unpkg.com/feather-icons" defer></script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js" defer></script>
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"/>
 <style>
@@ -346,7 +358,7 @@
     <p>From sun-ripened fruits to wholesome cereals and aromatic spices — explore the full range of premium agricultural produce Vyankyaa Foods exports to the world.</p>
   </div>
   <div class="page-hero-img">
-    <img src="https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=900&h=600&fit=crop" alt="Products"/>
+    <img src="images/hero_produce.png" alt="Products" width="1200" height="380" loading="eager" fetchpriority="high"/>
   </div>
 </section>
 
@@ -457,8 +469,9 @@
 
 <div id="footer-placeholder"></div>
 <script src="js/main.js"></script>
+<script src="js/products.js" defer></script>
 <script type="module">
-  import { fetchPublicProducts } from './js/products-service.js';
+  import { fetchPublicProducts, FALLBACK_PRODUCTS, sortProducts } from './js/products-service.js';
   import { db, collection, addDoc, serverTimestamp } from './js/firebase-config.js';
 
   // ── STATE ──
@@ -565,6 +578,19 @@
     });
   }
 
+  window.resetSelection = function() {
+    selectedProducts = [];
+    updateFAB();
+    document.querySelectorAll('.product-card.selected').forEach(c => {
+      c.classList.remove('selected');
+      const btn = c.querySelector('.product-btn');
+      if (btn) {
+        btn.classList.remove('selected');
+        btn.innerHTML = '+';
+      }
+    });
+  };
+
   // ── MULTI-PRODUCT SELECTION ─────────────────────────────────────────────────
   window.toggleProduct = function(productName, btn) {
     const card  = btn.closest('.product-card');
@@ -592,7 +618,7 @@
 
   window.openMultiQuotationModal = function() {
     if (!selectedProducts.length) return;
-    openQuotationModal(selectedProducts.join(', '));
+    window.openQuotationModal(selectedProducts.join(', '));
   };
 
   // ── QUOTATION MODAL ─────────────────────────────────────────────────────────
@@ -610,44 +636,16 @@
     document.getElementById('quotationForm')?.reset();
   };
 
-  // ── FORM SUBMISSION ─────────────────────────────────────────────────────────
-  document.getElementById('quotationForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const btn = e.target.querySelector('.submit-btn');
-    const orig = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Submitting…';
-    try {
-      await addDoc(collection(db, 'quotations'), {
-        product:   document.getElementById('productField').value,
-        name:      document.getElementById('nameField').value,
-        email:     document.getElementById('emailField').value,
-        phone:     document.getElementById('phoneField').value,
-        company:   document.getElementById('companyField').value,
-        city:      document.getElementById('cityField').value,
-        message:   document.getElementById('messageField').value,
-        timestamp: serverTimestamp(),
-        formType: 'quotation_request',
-        status:   'pending',
-      });
-      alert('Thank you! Your quotation request has been sent. We\'ll respond within 24 hours.');
-      closeQuotationModal();
-      // Clear selection state
-      selectedProducts = [];
-      updateFAB();
-      document.querySelectorAll('.product-card.selected').forEach(c => {
-        c.classList.remove('selected');
-        const btn = c.querySelector('.product-btn');
-        if (btn) { btn.classList.remove('selected'); btn.innerHTML = '+'; }
-      });
-    } catch(err) {
-      alert('Sorry, something went wrong. Please try again.');
-      console.error(err);
-    } finally { btn.disabled = false; btn.textContent = orig; }
-  });
+  // Form submission handled by js/products.js (EmailJS)
+  // We still keep the Firestore backup here if needed, but EmailJS is primary
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuotationModal(); });
 
-  // ── INIT — FETCH FROM FIRESTORE ─────────────────────────────────────────────
+  // ── INIT — INSTANT RENDER ───────────────────────────────────────────────────
+  // Step 1: Render fallback immediately
+  renderCatalog(FALLBACK_PRODUCTS);
+  
+  // Step 2: Fetch fresh data and update
   fetchPublicProducts()
     .then(products => {
       allProducts = products;

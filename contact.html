@@ -3,11 +3,24 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Contact — Vyankyaa Foods</title>
+<title>Contact | Vyankyaa Foods Export Enquiries</title>
+<meta name="description" content="Send an export enquiry, request bulk pricing, or start a trade partnership. We respond within 24 hours.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vyankyaa Foods">
+<meta property="og:image" content="/images/og-cover.jpg">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://vyankyaa-foods.vercel.app/contact.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="icon" type="image/png" href="/images/favicon.png">
+<link rel="apple-touch-icon" href="/images/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/feather-icons"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+<script src="https://unpkg.com/feather-icons" defer></script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+<script src="js/contact.js" defer></script>
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"/>
 <style>
@@ -146,7 +159,7 @@
     <p>Whether you're an importer, distributor, or retail buyer — we'd love to discuss how Vyankyaa Foods can serve your sourcing needs.</p>
   </div>
   <div class="page-hero-img">
-    <img src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=900&q=80" alt="Contact"/>
+    <img src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1200&q=75" alt="Contact" width="600" height="380" loading="eager" fetchpriority="high"/>
   </div>
 </section>
 
@@ -226,17 +239,17 @@
 
   <div class="contact-form reveal reveal-delay-1" id="contactForm">
     <div class="form-row">
-      <div class="field"><label>Your Name *</label><input type="text" id="f-name" placeholder="John Smith" required/></div>
-      <div class="field"><label>Company</label><input type="text" id="f-company" placeholder="Fresh Imports Ltd."/></div>
+      <div class="field"><label>Your Name *</label><input type="text" id="f-name" name="name" placeholder="John Smith" required/></div>
+      <div class="field"><label>Company</label><input type="text" id="f-company" name="company" placeholder="Fresh Imports Ltd."/></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Email *</label><input type="email" id="f-email" placeholder="john@company.com" required/></div>
-      <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="f-phone" placeholder="+1 555 000 0000"/></div>
+      <div class="field"><label>Email *</label><input type="email" id="f-email" name="email" placeholder="john@company.com" required/></div>
+      <div class="field"><label>Phone / WhatsApp</label><input type="tel" id="f-phone" name="phone" placeholder="+1 555 000 0000"/></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>City *</label><input type="text" id="f-city" placeholder="Mumbai" required/></div>
+      <div class="field"><label>City *</label><input type="text" id="f-city" name="city" placeholder="Mumbai" required/></div>
       <div class="field"><label>Enquiry Type</label>
-        <select id="f-type">
+        <select id="f-type" name="enquiry_type">
           <option value="">Select type...</option>
           <option>Import Enquiry</option>
           <option>B2B / Wholesale</option>
@@ -246,7 +259,7 @@
       </div>
     </div>
     <div class="field"><label>Product Interest</label>
-      <select id="f-product">
+      <select id="f-product" name="product_interest">
         <option value="">Select a product...</option>
         <option>Cold Pressed Safflower Oil</option>
         <option>Premium Sunflower Oil</option>
@@ -260,7 +273,7 @@
         <option>Multiple Products</option>
       </select>
     </div>
-    <div class="field"><label>Your Message *</label><textarea id="f-message" placeholder="Tell us about your requirements — volume, destination port, packaging preferences, target price..." required></textarea></div>
+    <div class="field"><label>Your Message *</label><textarea id="f-message" name="message" placeholder="Tell us about your requirements — volume, destination port, packaging preferences, target price..." required></textarea></div>
     <button class="submit-btn" id="submitBtn" type="button" onclick="handleSubmit()"><span>Send Enquiry <i class="bx bx-send"></i></span></button>
 
     <div class="form-success" id="formSuccess">
@@ -339,16 +352,6 @@
       submitBtn.innerHTML = originalBtnText;
     }
   }
-</script>
-
-<div id="footer-placeholder"></div>
-<script src="js/main.js"></script>
-<script>
-  loadComponent('nav-placeholder', 'components/nav.html');
-  loadComponent('footer-placeholder', 'components/footer.html');
-
-  // Initialize Boxicons
-  if (typeof boxicons !== 'undefined') boxicons.init();
 </script>
 
 </body>
