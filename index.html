@@ -95,20 +95,6 @@
 .tile-back p { font-family: 'Cormorant Garamond'; font-size: 16px; font-style: italic; line-height: 1.4; }
 .tile-back .icon { font-size: 20px; color: var(--gold); margin-bottom: 8px; }
 
-.hero-stat {
-  position:absolute; bottom:-30px; right:5%;
-  background:var(--warm-white); padding:16px 22px;
-  border-radius:4px; box-shadow:0 8px 40px rgba(44,26,14,0.12);
-  text-align:center; z-index:10;
-}
-.hero-stat .num {
-  font-family:'Bebas Neue'; font-size:32px; color:var(--gold);
-  display:block; line-height:1;
-}
-.hero-stat .lbl {
-  font-size:9px; letter-spacing:2px; text-transform:uppercase;
-  color:var(--light-text); margin-top:4px; display:block;
-}
 
 /* ABOUT PREVIEW */
 .about-preview {
@@ -266,8 +252,6 @@
   .hero-right { height:auto; width:100%; max-width:600px; margin:0 auto; gap: 12px; grid-template-columns: repeat(2, 1fr); }
   .hero-tile, .hero-tile.tall, .hero-tile.small { height: 160px; margin-top: 0 !important; }
   .tile-back p { font-size: 13px; padding: 10px; }
-  .hero-stat { bottom:-20px; right:50%; transform: translateX(50%); width: max-content; }
-  .hero-stat .num { font-size:28px; }
   .about-preview { grid-template-columns:1fr; padding:70px 20px; gap:44px; }
   .about-img-wrap { height:360px; }
   .feat-cats-grid { grid-template-columns:1fr; }
@@ -379,10 +363,6 @@
       </div>
     </div>
 
-    <div class="hero-stat">
-      <span class="num">50+</span>
-      <span class="lbl">Countries Served</span>
-    </div>
   </div>
 </section>
 
