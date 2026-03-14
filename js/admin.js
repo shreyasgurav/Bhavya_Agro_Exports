@@ -305,7 +305,7 @@ function renderPagedTable() {
       </td>
       <td class="px-5 py-3">
         <span class="type-badge ${item.collection==='quotations'?'type-quote':'type-contact'} mr-1">${item.collection==='quotations'?'Q':'M'}</span>
-        ${esc(item.collection==='quotations' ? (item.product||'—') : (item.enquiryType||'General'))}
+        ${esc(item.productInterest || item.product || (item.enquiryType==='General Enquiry'?'General':item.enquiryType) || '—')}
       </td>
       <td class="px-5 py-3 text-slate-600">${esc(item.city||'—')}</td>
       <td class="px-5 py-3"><span class="status-badge ${statusClass(item.status)}" id="row-status-${esc(item.id)}">${(item.status||'PENDING').toUpperCase()}</span></td>
@@ -354,8 +354,7 @@ function renderQuotesTable(quotes) {
         <div class="font-semibold">${esc(q.name)}</div>
         <div class="text-xs text-slate-400">${esc(q.email||'—')}</div>
       </td>
-      <td class="px-5 py-3 font-medium text-slate-800">${esc(q.product||'—')}</td>
-      <td class="px-5 py-3 text-slate-600">${esc(q.quantity||'—')}</td>
+      <td class="px-5 py-3 font-medium text-slate-800">${esc(q.productInterest || q.product || '—')}</td>
       <td class="px-5 py-3 text-slate-600">${esc(q.city||'—')}</td>
       <td class="px-5 py-3"><span class="status-badge ${statusClass(q.status)}" id="row-status-${esc(q.id)}">${(q.status||'PENDING').toUpperCase()}</span></td>
       <td class="px-5 py-3">
@@ -676,8 +675,8 @@ function openItemModal(item) {
   set('mod-city',    item.city || '—');
   set('mod-email',   item.email || '—');
   set('mod-phone',   item.phone || '—');
-  set('mod-subject-label', isQ ? 'PRODUCT & QUANTITY' : 'MESSAGE SUBJECT');
-  set('mod-product', isQ ? `${item.product||'N/A'} (Qty: ${item.quantity||'N/A'})` : (item.enquiryType||'General Enquiry'));
+  set('mod-subject-label', isQ ? 'PRODUCT' : 'MESSAGE SUBJECT');
+  set('mod-product', isQ ? (item.productInterest || item.product || '—') : (item.enquiryType||'General Enquiry'));
   set('mod-message', item.message || 'No message provided.');
 
   // Email link
