@@ -3,14 +3,27 @@
  */
 import { db, collection, addDoc, serverTimestamp } from './firebase-config.js';
 
-(function() {
-    // Initialise EmailJS with Public Key
-    if (typeof emailjs !== 'undefined') {
-        emailjs.init('1f0OHlEQ6aegRMz2C');
-    }
+const EMAILJS_SERVICE  = 'service_jniflqr';
+const EMAILJS_TEMPLATE = 'template_78x6aoq';
+const EMAILJS_KEY      = '1f0OHlEQ6aegRMz2C';
 
+function waitForEmailJS(callback) {
+    if (typeof emailjs !== 'undefined') {
+        if (!window.emailjsInitialized) {
+            emailjs.init(EMAILJS_KEY);
+            window.emailjsInitialized = true;
+        }
+        callback();
+    } else {
+        setTimeout(() => waitForEmailJS(callback), 100);
+    }
+}
+
+(function() {
     const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
+
+    waitForEmailJS(() => {});  // pre-warm EmailJS as early as possible
 
     // Validation structure
     const fields = ['f-name', 'f-email', 'f-phone', 'f-city', 'f-message'];
@@ -102,7 +115,7 @@ import { db, collection, addDoc, serverTimestamp } from './firebase-config.js';
         try {
             // 1. Send Email (EmailJS)
             if (typeof emailjs !== 'undefined') {
-                await emailjs.send('service_jniflqr', 'template_78x6aoq', templateParams);
+                await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, templateParams);
             }
 
             // 2. Save to Firebase (Backup/Admin)
