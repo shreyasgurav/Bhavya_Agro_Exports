@@ -22,11 +22,11 @@
   .type-badge { padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
   .type-quote { background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; }
   .type-contact { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-  .modal-overlay { opacity:0; visibility:hidden; transition:all .2s ease; }
+  .modal-overlay { opacity:0; visibility:hidden; transition:all .2s ease; overflow-y: auto; scrollbar-width: thin; }
   .modal-overlay.open { opacity:1; visibility:visible; }
-  .modal-panel { transform:translateX(100%); transition:transform .25s ease; }
+  .modal-panel { transform:translateX(100%); transition:transform .25s ease; height: 100%; }
   .modal-overlay.open .modal-panel { transform:translateX(0); }
-  .center-modal-panel { transform:scale(.95); transition:transform .2s ease; }
+  .center-modal-panel { transform:scale(.95); transition:transform .2s ease; margin-top: auto; margin-bottom: auto; }
   .modal-overlay.open .center-modal-panel { transform:scale(1); }
   .toast { position:fixed; bottom:24px; right:24px; z-index:9999; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; color:white; display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,.15); transform:translateY(80px); opacity:0; transition:all .3s ease; }
   .toast.show { transform:translateY(0); opacity:1; }
@@ -56,8 +56,8 @@
 <div id="toast" class="toast"><i id="toastIcon" class="bx bx-check-circle text-xl"></i><span id="toastMsg">Action completed</span></div>
 
 <!-- LOGIN OVERLAY -->
-<div id="loginOverlay" class="fixed inset-0 bg-[#0B1120] z-[2000] items-center justify-center p-4" style="display:flex;">
-  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+<div id="loginOverlay" class="fixed inset-0 bg-[#0B1120] z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden my-auto">
     <div class="bg-slate-50 px-8 py-6 border-b text-center">
       <h1 class="text-xl font-black text-slate-800 tracking-tight">Vyankyaa<span class="text-emerald-500">HQ</span></h1>
       <p class="text-xs text-slate-500 mt-1">Authorized admin access only</p>
@@ -316,8 +316,8 @@
 <!-- ════════════════════ MODALS ════════════════════ -->
 
 <!-- ENQUIRY DETAIL MODAL (slide-in right) -->
-<div id="enquiryModal" class="modal-overlay fixed inset-0 bg-slate-900/40 z-[3000] flex justify-end backdrop-blur-sm">
-  <div class="modal-panel bg-white w-full max-w-lg h-full shadow-2xl flex flex-col">
+<div id="enquiryModal" class="modal-overlay fixed inset-0 bg-slate-900/40 z-[3000] flex justify-end backdrop-blur-sm overflow-hidden">
+  <div class="modal-panel bg-white w-full max-w-md h-full shadow-2xl flex flex-col">
     <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-start bg-slate-50">
       <div>
         <div class="flex items-center gap-2 mb-1"><span id="mod-type-badge" class="type-badge type-quote"><i class='bx bxs-quote-left'></i> QUOTE</span><span id="mod-status-badge" class="status-badge status-pending">PENDING</span></div>
@@ -360,8 +360,8 @@
 </div>
 
 <!-- SEND QUOTE MODAL (center) -->
-<div id="quoteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-center justify-center backdrop-blur-sm p-4">
-  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+<div id="quoteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4 sm:p-6">
+  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-auto">
     <div class="px-6 py-5 border-b flex justify-between items-center bg-slate-50">
       <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class='bx bxs-file-pdf text-pink-500'></i> Send Quotation</h3>
       <button onclick="closeModal('quoteModal')" class="text-slate-400 hover:text-red-500"><i class='bx bx-x text-2xl'></i></button>
@@ -388,8 +388,8 @@
 </div>
 
 <!-- DELETE CONFIRM MODAL -->
-<div id="deleteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-center justify-center backdrop-blur-sm p-4">
-  <div class="center-modal-panel bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center">
+<div id="deleteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4">
+  <div class="center-modal-panel bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center my-auto">
     <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class='bx bx-trash'></i></div>
     <h3 class="font-bold text-slate-900 text-lg mb-1">Confirm Deletion</h3>
     <p class="text-sm text-slate-500 mb-5">This action cannot be undone. The record will be permanently removed.</p>
@@ -401,13 +401,13 @@
 </div>
 
 <!-- ADD PRODUCT MODAL -->
-<div id="productModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-center justify-center backdrop-blur-sm p-4">
-  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+<div id="productModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4 sm:p-6">
+  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-auto">
     <div class="px-6 py-5 border-b flex justify-between items-center bg-slate-50">
       <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class='bx bx-box text-emerald-500'></i> <span id="productModalTitle">Add Product</span></h3>
       <button onclick="closeModal('productModal')" class="text-slate-400 hover:text-red-500"><i class='bx bx-x text-2xl'></i></button>
     </div>
-    <div class="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+    <div class="p-6 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)] min-h-[300px]">
       <input type="hidden" id="prodEditId">
       <div class="grid grid-cols-2 gap-3">
         <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Name</label><input type="text" id="prodName" placeholder="e.g. Cold Pressed Safflower Oil" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400"></div>
