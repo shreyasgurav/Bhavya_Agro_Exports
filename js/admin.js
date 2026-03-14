@@ -1,5 +1,5 @@
 import { db, auth, collection, getDocs, query, orderBy, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, updateDoc, deleteDoc, storage, ref, uploadBytesResumable, getDownloadURL } from './firebase-config.js';
-import { fetchAllProducts, saveProduct as fsaveProduct, deleteProductById, updateProductStatus } from './products-service.js';
+import { fetchAllProducts, sortProducts, saveProduct as fsaveProduct, deleteProductById, updateProductStatus } from './products-service.js';
 
 // ════════════════════════════════════════════════
 // VYANKYAA ADMIN — COMPLETE INTERACTION ENGINE
