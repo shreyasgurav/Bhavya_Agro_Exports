@@ -111,19 +111,25 @@ if (!window.location.pathname.includes('admin')) {
       // 1. Prefetch for other pages
       m.prefetchProducts();
       
-      // 2. Populate Home Marquee if it exists
-      const marqueeTrack = document.querySelector('.marquee-track');
-      if (marqueeTrack) {
+      // 2. Populate Product Marquees if they exist (Home & Products Pages)
+      const isProductPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('products.html') || window.location.pathname === '/';
+      const marqueeTracks = document.querySelectorAll('.marquee-track');
+      
+      if (marqueeTracks.length > 0 && isProductPage) {
         const products = await m.fetchPublicProducts();
         if (products && products.length > 0) {
-          // Extract names and wrap in span
           const itemsHtml = products.map(p => `<span class="marquee-item">${p.name}</span>`).join('');
           
-          // Duplicate items to ensure smooth 0 -> -50% loop for the CSS animation
-          marqueeTrack.innerHTML = itemsHtml + itemsHtml;
+          marqueeTracks.forEach(track => {
+            // Only replace if it looks like the product marquee (contains current hardcoded items)
+            // or if it's the main one on the home page.
+            const currentContent = track.innerHTML.toLowerCase();
+            if (currentContent.includes('oil') || currentContent.includes('rice') || currentContent.includes('wheat')) {
+              track.innerHTML = itemsHtml + itemsHtml;
+            }
+          });
           
-          // Debug check
-          console.info(`[Marquee] Loaded ${products.length} products dynamically.`);
+          console.info(`[Marquee] Dynamically updated ${marqueeTracks.length} product strip(s).`);
         }
       }
     })
