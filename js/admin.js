@@ -1,4 +1,4 @@
-import { db, auth, collection, getDocs, query, orderBy, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, updateDoc, deleteDoc, storage, ref, uploadBytesResumable, getDownloadURL } from './firebase-config.js';
+import { db, auth, collection, getDocs, query, orderBy, signInWithEmailAndPassword, onAuthStateChanged, signOut, doc, updateDoc, deleteDoc, storage, ref, uploadBytesResumable, getDownloadURL, onSnapshot } from './firebase-config.js';
 import { fetchAllProducts, sortProducts, saveProduct as fsaveProduct, deleteProductById, updateProductStatus } from './products-service.js';
 window.fsaveProduct = fsaveProduct;
 
@@ -79,6 +79,9 @@ onAuthStateChanged(auth, user => {
   } else {
     loginOverlay.style.display = 'flex';
     dashboardLoaded = false;
+    // Cleanup listeners on logout
+    if (window._unsubQuotes) { window._unsubQuotes(); window._unsubQuotes = null; }
+    if (window._unsubContacts) { window._unsubContacts(); window._unsubContacts = null; }
   }
 });
 
@@ -112,36 +115,74 @@ logoutBtn.addEventListener('click', e => {
 // ════════════════════════════════════════════════
 // DATA LOADING
 // ════════════════════════════════════════════════
+// ── REAL-TIME LISTENERS ──
+window._unsubQuotes = null;
+window._unsubContacts = null;
+
 async function loadDashboard() {
   try {
-    const [snapQ, snapC] = await Promise.all([
-      getDocs(query(collection(db, 'quotations'), orderBy('timestamp', 'desc'))),
-      getDocs(query(collection(db, 'contacts'),   orderBy('timestamp', 'desc')))
-    ]);
-    const quotes   = snapQ.docs.map(d => ({ id:d.id, collection:'quotations', status:'pending', ...d.data() }));
-    const contacts = snapC.docs.map(d => ({ id:d.id, collection:'contacts',   status:'new',     ...d.data() }));
+    // 1. Setup Real-time Quotations Listener
+    const qQuotes = query(collection(db, 'quotations'), orderBy('timestamp', 'desc'));
+    let localQuotes = [];
+    let initialQuotesLoaded = false;
 
-    window.enquiriesData = [...quotes, ...contacts].sort((a,b) =>
-      (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
-    );
+    // 2. Setup Real-time Contacts Listener
+    const qContacts = query(collection(db, 'contacts'), orderBy('timestamp', 'desc'));
+    let localContacts = [];
+    let initialContactsLoaded = false;
 
-    // Pre-index all items
-    window._itemStore = [];
-    window.enquiriesData.forEach(item => storeItem(item));
+    const syncUI = () => {
+      window.enquiriesData = [...localQuotes, ...localContacts].sort((a,b) =>
+        (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
+      );
 
-    updateStats();
-    updateBadge();
-    renderRecentTable(window.enquiriesData.slice(0, 6));
-    filterAndRender();
-    renderQuotesTable(quotes);
-    renderContactsTable(contacts);
+      // Pre-index all items
+      window._itemStore = [];
+      window.enquiriesData.forEach(item => storeItem(item));
+
+      updateStats();
+      updateBadge();
+      renderRecentTable(window.enquiriesData.slice(0, 6));
+      filterAndRender();
+      renderQuotesTable(localQuotes);
+      renderContactsTable(localContacts);
+
+      // Also update dynamic tabs if they are currently visible
+      const activeTab = document.querySelector('.tab-content.active')?.id;
+      if (activeTab === 'dash-leads' && window.renderLeads) window.renderLeads();
+      if (activeTab === 'dash-reports' && window.renderReports) window.renderReports();
+    };
+
+    // Initialize listeners
+    if (window._unsubQuotes) window._unsubQuotes();
+    window._unsubQuotes = onSnapshot(qQuotes, (snap) => {
+      localQuotes = snap.docs.map(d => ({ id:d.id, collection:'quotations', status:'pending', ...d.data() }));
+      syncUI();
+      initialQuotesLoaded = true;
+    }, err => {
+      console.error('Quotes Listener error:', err);
+      window.showToast('Real-time updates failed for quotations.', 'error');
+    });
+
+    if (window._unsubContacts) window._unsubContacts();
+    window._unsubContacts = onSnapshot(qContacts, (snap) => {
+      localContacts = snap.docs.map(d => ({ id:d.id, collection:'contacts', status:'new', ...d.data() }));
+      syncUI();
+      initialContactsLoaded = true;
+    }, err => {
+      console.error('Contacts Listener error:', err);
+      window.showToast('Real-time updates failed for contacts.', 'error');
+    });
+
+    // Products and other static stuff
     renderProductsTable(); // show skeleton
     loadAdminProducts();   // async: loads from Firestore
     // Pre-cache sortProducts globally for Sortable usage
     window.sortProducts = sortProducts;
+
   } catch (err) {
     console.error('Load error:', err);
-    window.showToast('Failed to load data. Check connection.', 'error');
+    window.showToast('Failed to load dashboard.', 'error');
     ['dashRecentTable','fullEnquiriesTable','quotesTable','contactsTable'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-red-400"><i class='bx bxs-error-circle mr-2'></i>${err.message}</td></tr>`;
