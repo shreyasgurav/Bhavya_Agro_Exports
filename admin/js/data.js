@@ -327,7 +327,7 @@ window.VF = {
       email: 'namaste.bhavyaagroexports@gmail.com',
       address: 'Degloor, Dist. Nanded, Maharashtra — 431717, India',
       website: 'https://www.bhavyaagroexports.com',
-      adminName: 'Baalaje V. Kadaam',
+      adminName: 'Omkar Ghadgile',
       username: 'admin',
       password: 'admin123',
       heroTagline: 'India\'s Finest Flavours',
