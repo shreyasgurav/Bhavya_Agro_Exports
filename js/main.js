@@ -103,12 +103,31 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* ── PRE-FETCH PRODUCTS ── */
+/* ── PRE-FETCH PRODUCTS & POPULATE MARQUEE ── */
 // Only try if not on admin page (to avoid module conflicts)
 if (!window.location.pathname.includes('admin')) {
   import('./products-service.js')
-    .then(m => m.prefetchProducts())
-    .catch(e => console.warn('Prefetch skipped:', e));
+    .then(async m => {
+      // 1. Prefetch for other pages
+      m.prefetchProducts();
+      
+      // 2. Populate Home Marquee if it exists
+      const marqueeTrack = document.querySelector('.marquee-track');
+      if (marqueeTrack) {
+        const products = await m.fetchPublicProducts();
+        if (products && products.length > 0) {
+          // Extract names and wrap in span
+          const itemsHtml = products.map(p => `<span class="marquee-item">${p.name}</span>`).join('');
+          
+          // Duplicate items to ensure smooth 0 -> -50% loop for the CSS animation
+          marqueeTrack.innerHTML = itemsHtml + itemsHtml;
+          
+          // Debug check
+          console.info(`[Marquee] Loaded ${products.length} products dynamically.`);
+        }
+      }
+    })
+    .catch(e => console.warn('Product initialization skipped:', e));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
