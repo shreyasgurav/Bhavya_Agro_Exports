@@ -307,7 +307,7 @@ function loadCategories() {
         });
         
         // Update category select in product modal
-        updateCategorySelect(categories);
+        updateCategorySelect();
     });
 }
 
@@ -422,46 +422,87 @@ function showToast(message, type = 'success') {
 
 // Edit product functionality
 window.editProduct = function(id) {
+    console.log('🔧 Editing product:', id);
+    
+    // First update categories, then load product data
+    updateCategorySelect();
+    
     db.collection("products").doc(id).get().then((doc) => {
         if (doc.exists) {
             const product = doc.data();
+            console.log('📦 Product data loaded:', product);
             
-            // Pre-fill modal
-            document.getElementById('product-name').value = product.name;
-            document.getElementById('product-category').value = product.category;
-            document.getElementById('product-description').value = product.description;
-            document.getElementById('product-image').value = product.image || '';
-            document.getElementById('product-status').value = product.status;
-            
-            // Change modal to edit mode
-            document.querySelector('#add-product-modal h3').textContent = 'Edit Product';
-            document.querySelector('#add-product-form button[type="submit"]').textContent = 'Save Changes';
-            
-            // Store editing state
-            window.editingProductId = id;
-            
-            // Open modal
-            openAddProductModal();
+            // Wait a moment for categories to load, then pre-fill modal
+            setTimeout(() => {
+                // Pre-fill modal with product data
+                document.getElementById('product-name').value = product.name || '';
+                document.getElementById('product-category').value = product.category || '';
+                document.getElementById('product-description').value = product.description || '';
+                document.getElementById('product-image').value = product.image || '';
+                document.getElementById('product-status').value = product.status || 'available';
+                
+                // Change modal to edit mode
+                document.querySelector('#add-product-modal h3').textContent = 'Edit Product';
+                document.querySelector('#add-product-form button[type="submit"]').textContent = 'Save Changes';
+                
+                // Store editing state
+                window.editingProductId = id;
+                
+                // Open modal
+                openAddProductModal();
+                
+                console.log('✅ Edit modal populated with product data');
+            }, 500); // Small delay to ensure categories are loaded
+        } else {
+            console.error('❌ Product not found:', id);
+            showToast('Product not found', 'error');
         }
+    }).catch(error => {
+        console.error('❌ Error loading product:', error);
+        showToast('Failed to load product data', 'error');
     });
-}
+};
 
-// Update category select
-function updateCategorySelect(categories) {
+// Update category select with both Firestore categories and product-derived categories
+function updateCategorySelect() {
     const select = document.getElementById('product-category');
     if (!select) return;
     
-    // Clear existing options
+    // Clear existing options (keep the first placeholder option)
     while (select.children.length > 1) {
         select.removeChild(select.lastChild);
     }
     
-    // Add category options
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.name;
-        option.textContent = category.name;
-        select.appendChild(option);
+    // Get all unique categories from products and Firestore
+    Promise.all([
+        db.collection("categories").get(),
+        db.collection("products").get()
+    ]).then(([categoriesSnapshot, productsSnapshot]) => {
+        const firestoreCategories = categoriesSnapshot.docs.map(doc => doc.data().name).filter(Boolean);
+        const productCategories = [...new Set(productsSnapshot.docs.map(doc => doc.data().category).filter(Boolean))];
+        
+        // Combine and deduplicate all categories
+        const allCategories = [...new Set([...firestoreCategories, ...productCategories])].sort();
+        
+        // Add category options
+        allCategories.forEach(categoryName => {
+            const option = document.createElement('option');
+            option.value = categoryName;
+            option.textContent = categoryName;
+            select.appendChild(option);
+        });
+        
+        console.log('📋 Categories loaded:', allCategories);
+    }).catch(error => {
+        console.error('❌ Error loading categories:', error);
+        // Fallback to basic categories
+        const fallbackCategories = ['oils', 'grains', 'cakes'];
+        fallbackCategories.forEach(categoryName => {
+            const option = document.createElement('option');
+            option.value = categoryName;
+            option.textContent = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+            select.appendChild(option);
+        });
     });
 }
 
@@ -532,13 +573,24 @@ window.showToast = function(message, type = 'success') {
 
 // Modal functions
 window.openAddProductModal = function() {
+    console.log('🔓 Opening product modal...');
+    
+    // Load categories when opening modal
+    updateCategorySelect();
+    
     document.getElementById('add-product-modal').style.display = 'flex';
 };
 
 window.closeAddProductModal = function() {
+    console.log('🔒 Closing product modal...');
+    
     document.getElementById('add-product-modal').style.display = 'none';
     document.getElementById('add-product-form').reset();
+    
+    // Clear editing state
     window.editingProductId = null;
+    
+    // Reset modal to "Add Product" mode
     document.querySelector('#add-product-modal h3').textContent = 'Add Product';
     document.querySelector('#add-product-form button[type="submit"]').textContent = 'Add Product';
 };
@@ -560,35 +612,74 @@ document.addEventListener('DOMContentLoaded', function() {
         addProductForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Get form values
+            const name = document.getElementById('product-name').value.trim();
+            const category = document.getElementById('product-category').value.trim();
+            const description = document.getElementById('product-description').value.trim();
+            const image = document.getElementById('product-image').value.trim();
+            const status = document.getElementById('product-status').value;
+            
+            // Validation
+            if (!name) {
+                showToast('Product name is required', 'error');
+                return;
+            }
+            
+            if (!category) {
+                showToast('Category is required', 'error');
+                return;
+            }
+            
+            if (!description) {
+                showToast('Description is required', 'error');
+                return;
+            }
+            
+            console.log('💾 Saving product:', { name, category, status, hasImage: !!image });
+            
             const productData = {
-                name: document.getElementById('product-name').value,
-                category: document.getElementById('product-category').value,
-                description: document.getElementById('product-description').value,
-                image: document.getElementById('product-image').value || '',
-                status: document.getElementById('product-status').value,
-                createdAt: new Date()
+                name,
+                category,
+                description,
+                image: image || '',
+                status,
+                updatedAt: new Date()
             };
+            
+            // Only add createdAt for new products
+            if (!window.editingProductId) {
+                productData.createdAt = new Date();
+            }
             
             try {
                 if (window.editingProductId) {
                     // Update existing product
+                    console.log('🔄 Updating product:', window.editingProductId);
                     await db.collection("products").doc(window.editingProductId).update(productData);
                     showToast('Product updated successfully!', 'success');
+                    console.log('✅ Product updated in Firebase');
                 } else {
                     // Add new product
-                    await db.collection("products").add(productData);
+                    console.log('➕ Adding new product');
+                    const docRef = await db.collection("products").add(productData);
+                    console.log('✅ Product added to Firebase with ID:', docRef.id);
                     showToast('Product added successfully!', 'success');
                 }
                 
+                // Clear editing state
+                window.editingProductId = null;
+                
                 closeAddProductModal();
                 
-                // Trigger products-service.js cache clear for website sync
-                if (typeof clearProductCache === 'function') {
-                    clearProductCache();
-                }
+                // Clear cache for real-time sync
+                clearProductCache();
+                
+                // Refresh products list
+                loadProducts();
+                
             } catch (error) {
-                console.error('Error saving product:', error);
-                showToast('Failed to save product. Check console.', 'error');
+                console.error('❌ Error saving product:', error);
+                showToast('Failed to save product. Check console for details.', 'error');
             }
         });
     }
