@@ -23,7 +23,9 @@ let db, storage;
 // Initialize Firebase
 function initializeFirebase() {
     try {
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         db = firebase.firestore();
         storage = firebase.storage();
         console.log('✅ Firebase initialized successfully');
@@ -56,6 +58,12 @@ function setupLogin() {
         console.log('✅ User already logged in');
         loginScreen.style.display = 'none';
         adminDashboard.style.display = 'block';
+        
+        // Initialize Firebase if not already done
+        if (!db || !storage) {
+            initializeFirebase();
+        }
+        
         initializeAdmin();
         return;
     }
@@ -72,6 +80,12 @@ function setupLogin() {
             sessionStorage.setItem('adminLoggedIn', 'true');
             loginScreen.style.display = 'none';
             adminDashboard.style.display = 'block';
+            
+            // Initialize Firebase if not already done
+            if (!db || !storage) {
+                initializeFirebase();
+            }
+            
             initializeAdmin();
         } else {
             console.log('❌ Login failed');
