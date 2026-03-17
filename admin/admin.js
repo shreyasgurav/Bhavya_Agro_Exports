@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add product form
     const addProductForm = document.getElementById('add-product-form');
     if (addProductForm) {
-        addProductForm.addEventListener('submit', function(e) {
+        addProductForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const productData = {
@@ -347,22 +347,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            db.collection("products").add(productData)
-                .then(() => {
-                    closeAddProductModal();
-                    alert('Product added successfully!');
-                })
-                .catch(error => {
-                    console.error('Error adding product:', error);
-                    alert('Failed to add product. Check console.');
-                });
+            try {
+                await db.collection("products").add(productData);
+                closeAddProductModal();
+                alert('Product added successfully!');
+                
+                // Trigger products-service.js cache clear for website sync
+                if (typeof clearProductCache === 'function') {
+                    clearProductCache();
+                }
+            } catch (error) {
+                console.error('Error adding product:', error);
+                alert('Failed to add product. Check console.');
+            }
         });
     }
     
     // Add category form
     const addCategoryForm = document.getElementById('add-category-form');
     if (addCategoryForm) {
-        addCategoryForm.addEventListener('submit', function(e) {
+        addCategoryForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const categoryData = {
@@ -371,15 +375,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            db.collection("categories").add(categoryData)
-                .then(() => {
-                    closeAddCategoryModal();
-                    alert('Category added successfully!');
-                })
-                .catch(error => {
-                    console.error('Error adding category:', error);
-                    alert('Failed to add category. Check console.');
-                });
+            try {
+                await db.collection("categories").add(categoryData);
+                closeAddCategoryModal();
+                alert('Category added successfully!');
+                
+                // Trigger products-service.js cache clear for website sync
+                if (typeof clearProductCache === 'function') {
+                    clearProductCache();
+                }
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Failed to add category. Check console.');
+            }
         });
     }
 });
