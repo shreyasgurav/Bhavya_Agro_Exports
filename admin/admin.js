@@ -1,4 +1,5 @@
 import { db, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from '../js/firebase-config.js';
+// Force refresh - v2
 
 // HARDCODED CREDENTIALS (for demonstration)
 const AUTH = {
