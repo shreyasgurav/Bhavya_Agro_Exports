@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhavya Agro Exports — Admin (No Firebase)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>Bhavya Agro Exports</h1>
+            <p>Admin Panel (Test Version)</p>
+            <input type="text" id="username" placeholder="Username" value="omkar">
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-btn">Enter</button>
+            <div id="error-msg" class="error-msg">Incorrect username or password</div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" style="display: none;">
+        <header class="admin-header">
+            <div class="header-left">
+                <h1>Bhavya Agro Exports Admin</h1>
+            </div>
+            <div class="header-right">
+                <button onclick="logout()" class="logout-btn">Log out</button>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <button class="nav-btn active" onclick="showSection('inbox')">📥 Inbox</button>
+            <button class="nav-btn" onclick="showSection('products')">📦 Products</button>
+            <button class="nav-btn" onclick="showSection('categories')">🏷️ Categories</button>
+        </nav>
+
+        <section id="inbox-section" class="admin-section">
+            <div class="section-header">
+                <h2>Inbox</h2>
+                <div id="count-badge" class="count-badge">0 new inquiries</div>
+            </div>
+            <div id="inbox-container">
+                <p>✅ Login successful! This is a test version without Firebase.</p>
+                <p>The admin panel is working correctly!</p>
+            </div>
+        </section>
+
+        <section id="products-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Products</h2>
+                <button class="add-btn" onclick="openAddProductModal()">+ Add Product</button>
+            </div>
+            <div id="products-container">
+                <p>Products section - working!</p>
+            </div>
+        </section>
+
+        <section id="categories-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Categories</h2>
+                <button class="add-btn" onclick="openAddCategoryModal()">+ Add Category</button>
+            </div>
+            <div id="categories-container">
+                <p>Categories section - working!</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        console.log('🎯 Test admin panel loading...');
+        
+        // Simple test without Firebase
+        const AUTH = {
+            user: "omkar",
+            pass: "bhavya123"
+        };
+
+        // Get elements
+        const loginBtn = document.getElementById('login-btn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('error-msg');
+        const loginScreen = document.getElementById('login-screen');
+        const adminDashboard = document.getElementById('admin-dashboard');
+
+        console.log('✅ All elements found successfully!');
+
+        // Check if already logged in
+        const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+        if (isLoggedIn === 'true') {
+            console.log('🔄 User already logged in, showing dashboard');
+            loginScreen.style.display = 'none';
+            adminDashboard.style.display = 'block';
+        }
+
+        // Add login button event
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔥 LOGIN BUTTON CLICKED!');
+            console.log('📝 Username:', usernameInput.value);
+            console.log('🔑 Password:', passwordInput.value);
+            
+            const isCorrect = usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass;
+            console.log('✅ Login correct?', isCorrect);
+            
+            if (isCorrect) {
+                console.log('🎉 LOGIN SUCCESSFUL!');
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                loginScreen.style.display = 'none';
+                adminDashboard.style.display = 'block';
+            } else {
+                console.log('❌ LOGIN FAILED');
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Navigation
+        window.showSection = function(section) {
+            console.log('🔄 Showing section:', section);
+            
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate nav button
+            document.getElementById(`${section}-section`).style.display = 'block';
+            event.target.classList.add('active');
+        };
+
+        // Logout
+        window.logout = function() {
+            console.log('🚪 Logging out...');
+            sessionStorage.removeItem('adminLoggedIn');
+            loginScreen.style.display = 'flex';
+            adminDashboard.style.display = 'none';
+            usernameInput.value = '';
+            passwordInput.value = '';
+            errorMsg.style.display = 'none';
+        };
+
+        console.log('🚀 Admin panel ready!');
+    </script>
+</body>
+</html>
