@@ -49,6 +49,12 @@ function setupLogin() {
     loginBtn.addEventListener('click', function(e) {
         e.preventDefault();
         console.log('🔥 LOGIN BUTTON CLICKED!');
+        console.log('📝 Username entered:', usernameInput.value);
+        console.log('🔑 Password entered:', passwordInput.value);
+        console.log('👤 Expected username:', AUTH.user);
+        console.log('🔐 Expected password:', AUTH.pass);
+        console.log('🔍 Username match:', usernameInput.value === AUTH.user);
+        console.log('🔍 Password match:', passwordInput.value === AUTH.pass);
         
         if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
             console.log('✅ Login successful!');
@@ -60,6 +66,8 @@ function setupLogin() {
             initializeAdmin();
         } else {
             console.log('❌ Login failed - credentials incorrect');
+            console.log('❌ Username check failed:', usernameInput.value !== AUTH.user);
+            console.log('❌ Password check failed:', passwordInput.value !== AUTH.pass);
             errorMsg.style.display = 'block';
         }
     });
