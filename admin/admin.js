@@ -119,6 +119,13 @@ function initializeAdmin() {
     loadInbox();
     loadProducts();
     loadCategories();
+    loadContentSections();
+}
+
+// Load content sections status
+function loadContentSections() {
+    // This function will show the status of each content section
+    console.log('📝 Loading content sections status...');
 }
 
 // Navigation
@@ -620,6 +627,158 @@ window.convertToCategory = function(categoryName) {
     openAddCategoryModal();
 };
 
+// Content editing functionality
+window.editContent = function(section) {
+    console.log('🔧 Editing content section:', section);
+    
+    // Load current content
+    if (typeof getContentSection === 'function') {
+        getContentSection(section).then(content => {
+            if (content) {
+                openContentModal(section, content);
+            } else {
+                showToast('Failed to load content section', 'error');
+            }
+        });
+    } else {
+        showToast('Content manager not loaded', 'error');
+    }
+};
+
+// Open content modal
+window.openContentModal = function(section, content) {
+    const modal = document.getElementById('content-modal');
+    const title = document.getElementById('content-modal-title');
+    const formFields = document.getElementById('content-form-fields');
+    
+    // Set modal title
+    const sectionTitles = {
+        hero: 'Hero Section',
+        about: 'About Us',
+        whyChooseUs: 'Why Choose Us',
+        certificates: 'Certifications',
+        contact: 'Contact Information',
+        seo: 'SEO Settings'
+    };
+    
+    title.textContent = `Edit ${sectionTitles[section] || section}`;
+    
+    // Generate form fields based on content structure
+    let fieldsHTML = '';
+    
+    if (section === 'hero') {
+        fieldsHTML = `
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="content-title" value="${content.title || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Subtitle</label>
+                <input type="text" id="content-subtitle" value="${content.subtitle || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="content-description" rows="4" required>${content.description || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>CTA Button Text</label>
+                <input type="text" id="content-cta" value="${content.ctaButton || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Background Image</label>
+                <input type="text" id="content-background" value="${content.backgroundImage || ''}" placeholder="images/hero_produce.png">
+            </div>
+        `;
+    } else if (section === 'contact') {
+        fieldsHTML = `
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="content-email" value="${content.email || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="content-phone" value="${content.phone || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea id="content-address" rows="3" required>${content.address || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Working Hours</label>
+                <input type="text" id="content-hours" value="${content.workingHours || ''}" required>
+            </div>
+        `;
+    } else if (section === 'seo') {
+        fieldsHTML = `
+            <div class="form-group">
+                <label>Meta Title</label>
+                <input type="text" id="content-meta-title" value="${content.metaTitle || ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Meta Description</label>
+                <textarea id="content-meta-description" rows="3" required>${content.metaDescription || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Keywords</label>
+                <input type="text" id="content-keywords" value="${content.keywords || ''}" placeholder="comma, separated, keywords">
+            </div>
+            <div class="form-group">
+                <label>OG Image</label>
+                <input type="text" id="content-og-image" value="${content.ogImage || ''}" placeholder="images/og-cover.jpg">
+            </div>
+        `;
+    } else {
+        // Generic content editor
+        fieldsHTML = `
+            <div class="form-group">
+                <label>Content (JSON)</label>
+                <textarea id="content-json" rows="10" required>${JSON.stringify(content, null, 2)}</textarea>
+                <small>Edit the JSON content above</small>
+            </div>
+        `;
+    }
+    
+    formFields.innerHTML = fieldsHTML;
+    
+    // Store current section
+    window.editingContentSection = section;
+    
+    // Show modal
+    modal.style.display = 'flex';
+};
+
+// Close content modal
+window.closeContentModal = function() {
+    const modal = document.getElementById('content-modal');
+    modal.style.display = 'none';
+    document.getElementById('content-form').reset();
+    window.editingContentSection = null;
+};
+
+// Settings functions
+window.clearAllCaches = function() {
+    if (confirm('This will clear all caches across the website. Continue?')) {
+        clearProductCache();
+        clearWebsiteCache();
+        showToast('All caches cleared successfully', 'success');
+    }
+};
+
+window.backupData = function() {
+    console.log('💾 Creating data backup...');
+    showToast('Backup functionality coming soon', 'info');
+};
+
+window.viewAnalytics = function() {
+    console.log('📊 Opening analytics...');
+    showToast('Analytics dashboard coming soon', 'info');
+};
+
+window.changePassword = function() {
+    console.log('🔑 Opening password change...');
+    showToast('Password change functionality coming soon', 'info');
+};
+
 // Modal functions
 window.openAddProductModal = function() {
     console.log('🔓 Opening product modal...');
@@ -829,6 +988,81 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('❌ Error saving category:', error);
                 showToast('Failed to save category. Check console for details.', 'error');
+            }
+        });
+    }
+    
+    // Content form
+    const contentForm = document.getElementById('content-form');
+    if (contentForm) {
+        contentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const section = window.editingContentSection;
+            if (!section) {
+                showToast('No content section selected', 'error');
+                return;
+            }
+            
+            let contentData = {};
+            
+            // Extract data based on section type
+            if (section === 'hero') {
+                contentData = {
+                    title: document.getElementById('content-title').value.trim(),
+                    subtitle: document.getElementById('content-subtitle').value.trim(),
+                    description: document.getElementById('content-description').value.trim(),
+                    ctaButton: document.getElementById('content-cta').value.trim(),
+                    backgroundImage: document.getElementById('content-background').value.trim()
+                };
+            } else if (section === 'contact') {
+                contentData = {
+                    email: document.getElementById('content-email').value.trim(),
+                    phone: document.getElementById('content-phone').value.trim(),
+                    address: document.getElementById('content-address').value.trim(),
+                    workingHours: document.getElementById('content-hours').value.trim()
+                };
+            } else if (section === 'seo') {
+                contentData = {
+                    metaTitle: document.getElementById('content-meta-title').value.trim(),
+                    metaDescription: document.getElementById('content-meta-description').value.trim(),
+                    keywords: document.getElementById('content-keywords').value.trim(),
+                    ogImage: document.getElementById('content-og-image').value.trim()
+                };
+            } else {
+                // Generic JSON content
+                try {
+                    contentData = JSON.parse(document.getElementById('content-json').value);
+                } catch (error) {
+                    showToast('Invalid JSON format', 'error');
+                    return;
+                }
+            }
+            
+            // Validate required fields
+            if (!contentData || Object.keys(contentData).length === 0) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            console.log('💾 Saving content:', section, contentData);
+            
+            try {
+                if (typeof updateContentSection === 'function') {
+                    const success = await updateContentSection(section, contentData);
+                    if (success) {
+                        showToast('Content updated successfully!', 'success');
+                        closeContentModal();
+                        clearWebsiteCache();
+                    } else {
+                        showToast('Failed to update content', 'error');
+                    }
+                } else {
+                    showToast('Content manager not available', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error saving content:', error);
+                showToast('Failed to save content. Check console for details.', 'error');
             }
         });
     }

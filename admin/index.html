@@ -37,6 +37,8 @@
             <button class="nav-btn active" onclick="showSection('inbox')">📥 Inbox</button>
             <button class="nav-btn" onclick="showSection('products')">📦 Products</button>
             <button class="nav-btn" onclick="showSection('categories')">🏷️ Categories</button>
+            <button class="nav-btn" onclick="showSection('content')">📝 Content</button>
+            <button class="nav-btn" onclick="showSection('settings')">⚙️ Settings</button>
         </nav>
 
         <section id="inbox-section" class="admin-section">
@@ -66,6 +68,89 @@
             </div>
             <div id="categories-container">
                 <p>Loading categories...</p>
+            </div>
+        </section>
+
+        <!-- CONTENT MANAGEMENT SECTION -->
+        <section id="content-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Website Content</h2>
+                <button class="add-btn" onclick="populateWebsiteContent()">🔄 Populate Default Content</button>
+            </div>
+            <div class="content-grid">
+                <div class="content-card">
+                    <h3>🏠 Hero Section</h3>
+                    <p>Main landing page hero content</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('hero')">✏️ Edit</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>📖 About Us</h3>
+                    <p>Company story and heritage</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('about')">✏️ Edit</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>⭐ Why Choose Us</h3>
+                    <p>Key selling points and advantages</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('whyChooseUs')">✏️ Edit</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>🏆 Certifications</h3>
+                    <p>Company certifications and compliance</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('certificates')">✏️ Edit</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>📞 Contact Info</h3>
+                    <p>Contact details and business hours</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('contact')">✏️ Edit</button>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>🔍 SEO Settings</h3>
+                    <p>Meta tags and SEO configuration</p>
+                    <div class="content-actions">
+                        <button class="action-btn btn-edit" onclick="editContent('seo')">✏️ Edit</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="settings-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Settings</h2>
+            </div>
+            <div class="settings-grid">
+                <div class="setting-card">
+                    <h3>🔧 System Settings</h3>
+                    <p>Configure system-wide settings</p>
+                    <div class="setting-actions">
+                        <button class="action-btn" onclick="clearAllCaches()">🗑️ Clear All Caches</button>
+                        <button class="action-btn" onclick="backupData()">💾 Backup Data</button>
+                    </div>
+                </div>
+                <div class="setting-card">
+                    <h3>📊 Analytics</h3>
+                    <p>View system analytics and usage</p>
+                    <div class="setting-actions">
+                        <button class="action-btn" onclick="viewAnalytics()">📈 View Analytics</button>
+                    </div>
+                </div>
+                <div class="setting-card">
+                    <h3>🔐 Security</h3>
+                    <p>Manage security settings</p>
+                    <div class="setting-actions">
+                        <button class="action-btn" onclick="changePassword()">🔑 Change Password</button>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -172,9 +257,29 @@
         </div>
     </div>
 
+    <!-- CONTENT EDITING MODAL -->
+    <div id="content-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="content-modal-title">Edit Content</h3>
+                <button class="close-btn" onclick="closeContentModal()">×</button>
+            </div>
+            <form id="content-form">
+                <div id="content-form-fields">
+                    <!-- Dynamic fields will be inserted here -->
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeContentModal()">Cancel</button>
+                    <button type="submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="website-content-manager.js"></script>
     <script src="admin.js" defer></script>
 </body>
 </html>
