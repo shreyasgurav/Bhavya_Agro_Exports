@@ -1,4 +1,4 @@
-/* Admin Panel Styles - v3 */
+/* Admin Panel Styles - v4 */
 :root {
     --cream: #F5F0E8;
     --earth: #2C1A0E;
@@ -384,5 +384,343 @@ td {
     
     .row-done td::before {
         text-decoration: none;
+    }
+}
+
+/* ADMIN DASHBOARD STYLES */
+.admin-header {
+    background: var(--white);
+    padding: 20px 40px;
+    border-bottom: 1px solid #EEEEEE;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.admin-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--earth);
+}
+
+.logout-btn {
+    background: var(--gold);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.logout-btn:hover {
+    opacity: 0.9;
+}
+
+/* NAVIGATION */
+.admin-nav {
+    background: var(--white);
+    padding: 20px 40px;
+    border-bottom: 1px solid #EEEEEE;
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid #E0E0E0;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.nav-btn:hover {
+    background: var(--pale-gold);
+    border-color: var(--gold);
+}
+
+.nav-btn.active {
+    background: var(--gold);
+    color: white;
+    border-color: var(--gold);
+}
+
+/* ADMIN SECTIONS */
+.admin-section {
+    padding: 40px;
+    min-height: calc(100vh - 200px);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.section-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--earth);
+}
+
+.add-btn {
+    background: var(--green);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.add-btn:hover {
+    background: #2E7D32;
+    transform: translateY(-1px);
+}
+
+/* CATEGORIES GRID */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background: var(--white);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #EEEEEE;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.category-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--earth);
+}
+
+.category-card p {
+    color: var(--grey);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.category-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* MODALS */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 26, 14, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--earth);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--grey);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--pale-gold);
+}
+
+/* FORMS */
+#add-product-form, #add-category-form {
+    padding: 0 24px 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--earth);
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--gold);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.form-actions button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 14px;
+}
+
+.form-actions button[type="button"] {
+    background: #E0E0E0;
+    color: var(--earth);
+}
+
+.form-actions button[type="button"]:hover {
+    background: #D0D0D0;
+}
+
+.form-actions button[type="submit"] {
+    background: var(--gold);
+    color: white;
+}
+
+.form-actions button[type="submit"]:hover {
+    background: #B8852F;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 15px 20px;
+    }
+    
+    .admin-header h1 {
+        font-size: 20px;
+    }
+    
+    .admin-nav {
+        padding: 15px 20px;
+        gap: 10px;
+    }
+    
+    .nav-btn {
+        padding: 10px 16px;
+        font-size: 12px;
+    }
+    
+    .admin-section {
+        padding: 20px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .section-header h2 {
+        font-size: 28px;
+    }
+    
+    .categories-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .category-card {
+        padding: 20px;
+    }
+    
+    .modal-content {
+        margin: 10px;
+        max-height: calc(100vh - 40px);
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button {
+        width: 100%;
     }
 }
