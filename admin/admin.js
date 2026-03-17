@@ -82,14 +82,14 @@ function renderTable() {
                 <button class="action-btn ${isNew ? 'btn-done' : 'btn-reopen'}" data-id="${item.id}" data-current="${status}">
                     ${isNew ? '✓' : '↩'}
                 </button>
-                <button class="action-btn btn-delete" data-id="${item.id}" onclick="confirmDelete('${item.id}', '${item.name || 'Anonymous'}')">
+                <button class="action-btn btn-delete" data-id="${item.id}" onclick="confirmDelete('${item.id}', '${(item.name || 'Anonymous').replace(/'/g, "\\'")}')">
                     🗑
                 </button>
             </td>
         `;
 
-        // Add click listener for status toggle
-        tr.querySelector('.action-btn').onclick = () => toggleStatus(item.id, status);
+        // Add click listeners for action buttons
+        tr.querySelector('.btn-done, .btn-reopen').onclick = () => toggleStatus(item.id, status);
 
         tbody.appendChild(tr);
     });
