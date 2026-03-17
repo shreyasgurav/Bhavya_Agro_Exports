@@ -1,5 +1,5 @@
 import { db, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from '../js/firebase-config.js';
-// Force refresh - v2
+// Force refresh - v3
 
 // HARDCODED CREDENTIALS (for demonstration)
 const AUTH = {
@@ -15,9 +15,34 @@ const errorMsg = document.getElementById('error-msg');
 const loginScreen = document.getElementById('login-screen');
 const inboxPage = document.getElementById('inbox-page');
 
+// Check if user is already logged in
+function checkLoginStatus() {
+    const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+    if (isLoggedIn === 'true') {
+        loginScreen.style.display = 'none';
+        inboxPage.style.display = 'block';
+        initRealtimeInbox();
+    }
+}
+
+// Call checkLoginStatus on page load
+checkLoginStatus();
+
+// Logout function
+window.logout = function() {
+    sessionStorage.removeItem('adminLoggedIn');
+    loginScreen.style.display = 'flex';
+    inboxPage.style.display = 'none';
+    usernameInput.value = '';
+    passwordInput.value = '';
+    errorMsg.style.display = 'none';
+};
+
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
+            // Save login state to session storage
+            sessionStorage.setItem('adminLoggedIn', 'true');
             loginScreen.style.display = 'none';
             inboxPage.style.display = 'block';
             initRealtimeInbox();

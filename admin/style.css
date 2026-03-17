@@ -1,4 +1,4 @@
-/* Admin Panel Styles - v2 */
+/* Admin Panel Styles - v3 */
 :root {
     --cream: #F5F0E8;
     --earth: #2C1A0E;
@@ -125,6 +125,16 @@ body {
     border-radius: 50px;
     font-size: 14px;
     font-weight: 700;
+}
+
+.header-section div[onclick] {
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.header-section div[onclick]:hover {
+    background-color: rgba(44, 26, 14, 0.1);
 }
 
 .table-container {
@@ -254,13 +264,17 @@ td {
 }
 
 .btn-delete {
-    background-color: #D32F2F;
+    background-color: #FF5252;
     color: white;
     margin-left: 4px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid #FF1744;
 }
 
 .btn-delete:hover {
-    background-color: #B71C1C;
+    background-color: #FF1744;
+    transform: scale(1.05);
 }
 
 .status-tag {
