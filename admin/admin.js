@@ -6,7 +6,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
     authDomain: "bhavya-agro-d3407.firebaseapp.com",
     projectId: "bhavya-agro-d3407",
-    storageBucket: "bhavya-agro-d3407.firebasestorage.app",
+    storageBucket: "bhavya-agro-d3407.appspot.com",
     messagingSenderId: "701815969630",
     appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
     measurementId: "G-GMV0NN4VKR"

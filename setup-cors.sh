@@ -29,7 +29,7 @@ echo "📋 Using project ID: $PROJECT_ID"
 # Apply CORS configuration
 echo "🌐 Applying CORS configuration to Firebase Storage..."
 
-gsutil cors set cors.json gs://$PROJECT_ID.appspot.com
+gsutil cors set cors.json gs://bhavya-agro-d3407.appspot.com
 
 if [ $? -eq 0 ]; then
     echo "✅ CORS configuration applied successfully!"
