@@ -1,159 +1,93 @@
-// Simple Firebase setup for local development
-let db;
+// Simple Admin Panel - Fresh Start
+console.log('Admin panel loading...');
 
-// Initialize Firebase when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeFirebase();
-});
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
+    authDomain: "bhavya-agro-d3407.firebaseapp.com",
+    projectId: "bhavya-agro-d3407",
+    storageBucket: "bhavya-agro-d3407.firebasestorage.app",
+    messagingSenderId: "701815969630",
+    appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
+    measurementId: "G-GMV0NN4VKR"
+};
 
-function initializeFirebase() {
-    const firebaseConfig = {
-        apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
-        authDomain: "bhavya-agro-d3407.firebaseapp.com",
-        projectId: "bhavya-agro-d3407",
-        storageBucket: "bhavya-agro-d3407.firebasestorage.app",
-        messagingSenderId: "701815969630",
-        appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
-        measurementId: "G-GMV0NN4VKR"
-    };
-
-    // Wait for Firebase to be available
-    if (typeof firebase !== 'undefined') {
-        const app = firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        initializeAdminAfterFirebase();
-    } else {
-        // Retry after a short delay
-        setTimeout(initializeFirebase, 100);
-    }
-}
-
-// HARDCODED CREDENTIALS (for demonstration)
+// Login credentials
 const AUTH = {
     user: "omkar",
     pass: "bhavya123"
 };
 
-// LOGIN LOGIC
-let loginBtn, usernameInput, passwordInput, errorMsg, loginScreen, adminDashboard;
+let db;
 
-// Initialize admin elements
-function initializeAdminElements() {
-    loginBtn = document.getElementById('login-btn');
-    usernameInput = document.getElementById('username');
-    passwordInput = document.getElementById('password');
-    errorMsg = document.getElementById('error-msg');
-    loginScreen = document.getElementById('login-screen');
-    adminDashboard = document.getElementById('admin-dashboard');
+// Initialize Firebase
+function initializeFirebase() {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        console.log('✅ Firebase initialized successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        return false;
+    }
 }
 
-// Check if user is already logged in
-function checkLoginStatus() {
+// Login functionality
+function setupLogin() {
+    const loginBtn = document.getElementById('login-btn');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMsg = document.getElementById('error-msg');
+    const loginScreen = document.getElementById('login-screen');
+    const adminDashboard = document.getElementById('admin-dashboard');
+
+    console.log('🔧 Setting up login...');
+
+    if (!loginBtn || !usernameInput || !passwordInput) {
+        console.error('❌ Login elements not found');
+        return;
+    }
+
+    // Check if already logged in
     const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
     if (isLoggedIn === 'true') {
+        console.log('✅ User already logged in');
         loginScreen.style.display = 'none';
         adminDashboard.style.display = 'block';
         initializeAdmin();
+        return;
     }
-}
 
-// Logout function
-window.logout = function() {
-    sessionStorage.removeItem('adminLoggedIn');
-    loginScreen.style.display = 'flex';
-    adminDashboard.style.display = 'none';
-    usernameInput.value = '';
-    passwordInput.value = '';
-    errorMsg.style.display = 'none';
-};
-
-// Setup login button
-function setupLoginButton() {
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
-                // Save login state to session storage
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                loginScreen.style.display = 'none';
-                adminDashboard.style.display = 'block';
-                initializeAdmin();
-            } else {
-                errorMsg.style.display = 'block';
-            }
-        });
-    }
-}
-
-// Initialize admin after Firebase is ready
-function initializeAdminAfterFirebase() {
-    initializeAdminElements();
-    checkLoginStatus();
-    setupLoginButton();
-    
-    // Setup form submissions
-    setupForms();
-}
-
-// Setup form submissions
-function setupForms() {
-    // Add Product Form
-    const addProductForm = document.getElementById('add-product-form');
-    if (addProductForm) {
-        addProductForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const productData = {
-                name: document.getElementById('product-name').value,
-                category: document.getElementById('product-category').value,
-                description: document.getElementById('product-description').value,
-                image: document.getElementById('product-image').value || '',
-                status: document.getElementById('product-status').value,
-                createdAt: new Date()
-            };
-            
-            try {
-                await db.collection('products').add(productData);
-                closeAddProductModal();
-                alert('Product added successfully!');
-            } catch (error) {
-                console.error('Error adding product:', error);
-                alert('Failed to add product. Check console.');
-            }
-        });
-    }
-    
-    // Add Category Form
-    const addCategoryForm = document.getElementById('add-category-form');
-    if (addCategoryForm) {
-        addCategoryForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const categoryData = {
-                name: document.getElementById('category-name').value,
-                description: document.getElementById('category-description').value,
-                createdAt: new Date()
-            };
-            
-            try {
-                await db.collection('categories').add(categoryData);
-                closeAddCategoryModal();
-                alert('Category added successfully!');
-            } catch (error) {
-                console.error('Error adding category:', error);
-                alert('Failed to add category. Check console.');
-            }
-        });
-    }
+    // Add login button event
+    loginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🔥 LOGIN BUTTON CLICKED!');
+        console.log('📝 Username:', usernameInput.value);
+        console.log('🔑 Password:', passwordInput.value);
+        
+        if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
+            console.log('✅ Login successful!');
+            sessionStorage.setItem('adminLoggedIn', 'true');
+            loginScreen.style.display = 'none';
+            adminDashboard.style.display = 'block';
+            initializeAdmin();
+        } else {
+            console.log('❌ Login failed');
+            errorMsg.style.display = 'block';
+        }
+    });
 }
 
 // Initialize admin panel
 function initializeAdmin() {
-    initRealtimeInbox();
-    initProducts();
-    initCategories();
+    console.log('🚀 Initializing admin panel...');
+    loadInbox();
+    loadProducts();
+    loadCategories();
 }
 
-// NAVIGATION
+// Navigation
 window.showSection = function(section) {
     // Hide all sections
     document.querySelectorAll('.admin-section').forEach(sec => {
@@ -168,211 +102,152 @@ window.showSection = function(section) {
     // Show selected section and activate nav button
     document.getElementById(`${section}-section`).style.display = 'block';
     event.target.classList.add('active');
-}
-
-// INBOX FUNCTIONALITY
-let inquiries = [];
-
-function initRealtimeInbox() {
-    db.collection("contacts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        inquiries = snapshot.docs.map(d => ({
-            id: d.id,
-            ...d.data()
-        }));
-        renderInboxTable();
-    }, (error) => {
-        console.error("Firestore Listen Error:", error);
-    });
-}
-
-function renderInboxTable() {
-    const tbody = document.getElementById('inbox-tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    let newCount = 0;
-
-    if (inquiries.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--grey);">No inquiries found.</td></tr>';
-        document.getElementById('count-badge').textContent = `0 new inquiries`;
-        return;
-    }
-
-    inquiries.forEach(item => {
-        const status = (item.status || 'new').toLowerCase();
-        const isNew = status === "new";
-        if (isNew) newCount++;
-
-        const tr = document.createElement('tr');
-        tr.className = isNew ? 'row-new' : 'row-done';
-        
-        // Format Date
-        let dateStr = '---';
-        if (item.timestamp) {
-            const d = item.timestamp.toDate ? item.timestamp.toDate() : new Date(item.timestamp);
-            dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
-
-        tr.innerHTML = `
-            <td data-label="Name" style="font-weight: 700;">${item.name || 'Anonymous'}</td>
-            <td data-label="City">${item.city || '---'}</td>
-            <td data-label="Phone" style="font-family: 'DM Sans'; font-size: 13px;">${item.phone || '---'}</td>
-            <td data-label="Message" class="msg-cell">${item.message || 'No message'}</td>
-            <td data-label="Date" style="color: #888; font-size: 12px;">${dateStr}</td>
-            <td data-label="Status"><span class="status-tag ${isNew ? 'tag-new' : 'tag-done'}">${status.toUpperCase()}</span></td>
-            <td data-label="Action">
-                <button class="action-btn ${isNew ? 'btn-done' : 'btn-reopen'}" data-id="${item.id}" data-current="${status}">
-                    ${isNew ? '✓' : '↩'}
-                </button>
-                <button class="action-btn btn-delete" data-id="${item.id}" onclick="confirmDelete('${item.id}', '${(item.name || 'Anonymous').replace(/'/g, "\\'")}')">
-                    🗑
-                </button>
-            </td>
-        `;
-
-        // Add click listeners for action buttons
-        tr.querySelector('.btn-done, .btn-reopen').onclick = () => toggleStatus(item.id, status);
-
-        tbody.appendChild(tr);
-    });
-
-    const countBadge = document.getElementById('count-badge');
-    if (countBadge) countBadge.textContent = `${newCount} new inquiries`;
-}
-
-async function toggleStatus(id, currentStatus) {
-    const nextStatus = currentStatus === "new" ? "done" : "new";
-    try {
-        await db.collection("contacts").doc(id).update({ status: nextStatus });
-    } catch (err) {
-        console.error("Error updating status:", err);
-        alert("Failed to update status. Check console.");
-    }
-}
-
-// DELETE FUNCTIONALITY
-window.confirmDelete = function(id, name) {
-    if (confirm(`Are you sure you want to delete the inquiry from ${name}? This action cannot be undone.`)) {
-        deleteInquiry(id);
-    }
 };
 
-async function deleteInquiry(id) {
-    try {
-        const docRef = doc(db, "contacts", id);
-        await deleteDoc(docRef);
-        console.log("Document successfully deleted");
-    } catch (err) {
-        console.error("Error deleting document:", err);
-        alert("Failed to delete inquiry. Check console.");
-    }
-}
+// Logout
+window.logout = function() {
+    console.log('🚪 Logging out...');
+    sessionStorage.removeItem('adminLoggedIn');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-dashboard').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('error-msg').style.display = 'none';
+};
 
-// PRODUCTS FUNCTIONALITY
-let products = [];
-let categories = [];
-
-function initProducts() {
-    const q = query(collection(db, "products"), orderBy("name", "asc"));
+// Load inbox
+function loadInbox() {
+    const container = document.getElementById('inbox-container');
+    container.innerHTML = '<p>Loading inquiries...</p>';
     
-    onSnapshot(q, (snapshot) => {
-        products = snapshot.docs.map(d => ({
-            id: d.id,
-            ...d.data()
+    db.collection('contacts').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+        const inquiries = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
         }));
-        renderProductsTable();
-    }, (error) => {
-        console.error("Products Listen Error:", error);
-    });
-}
-
-function renderProductsTable() {
-    const tbody = document.getElementById('products-tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-
-    if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--grey);">No products found.</td></tr>';
-        return;
-    }
-
-    products.forEach(product => {
-        const tr = document.createElement('tr');
         
-        tr.innerHTML = `
-            <td data-label="Image">
-                ${product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999;">No Image</div>'}
-            </td>
-            <td data-label="Name" style="font-weight: 700;">${product.name}</td>
-            <td data-label="Category">${product.category || '---'}</td>
-            <td data-label="Description" class="msg-cell">${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
-            <td data-label="Status">
-                <span class="status-tag ${product.status === 'available' ? 'tag-new' : 'tag-done'}">
-                    ${product.status ? product.status.toUpperCase() : 'AVAILABLE'}
-                </span>
-            </td>
-            <td data-label="Actions">
-                <button class="action-btn btn-delete" onclick="confirmDeleteProduct('${product.id}', '${product.name.replace(/'/g, "\\'")}')">
-                    🗑
-                </button>
-            </td>
-        `;
-
-        tbody.appendChild(tr);
+        if (inquiries.length === 0) {
+            container.innerHTML = '<p>No inquiries found.</p>';
+            document.getElementById('count-badge').textContent = '0 new inquiries';
+            return;
+        }
+        
+        let html = '<table><thead><tr><th>Name</th><th>City</th><th>Phone</th><th>Message</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+        
+        inquiries.forEach(inquiry => {
+            const status = (inquiry.status || 'new').toLowerCase();
+            const isNew = status === 'new';
+            const date = inquiry.timestamp ? inquiry.timestamp.toDate().toLocaleDateString() : '---';
+            
+            html += `
+                <tr>
+                    <td>${inquiry.name || 'Anonymous'}</td>
+                    <td>${inquiry.city || '---'}</td>
+                    <td>${inquiry.phone || '---'}</td>
+                    <td><a href="#" onclick="viewMsg('${inquiry.name}', '${inquiry.message}')">View</a></td>
+                    <td>${date}</td>
+                    <td><span class="status-tag ${isNew ? 'tag-new' : 'tag-done'}">${status.toUpperCase()}</span></td>
+                    <td>
+                        <button class="action-btn ${isNew ? 'btn-done' : 'btn-reopen'}" onclick="toggleStatus('${inquiry.id}', '${status}')">${isNew ? '✓' : '↩'}</button>
+                        <button class="action-btn btn-delete" onclick="deleteInquiry('${inquiry.id}', '${inquiry.name}')">🗑</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        
+        const newCount = inquiries.filter(i => (i.status || 'new').toLowerCase() === 'new').length;
+        document.getElementById('count-badge').textContent = `${newCount} new inquiries`;
     });
 }
 
-// CATEGORIES FUNCTIONALITY
-function initCategories() {
-    const q = query(collection(db, "categories"), orderBy("name", "asc"));
+// Load products
+function loadProducts() {
+    const container = document.getElementById('products-container');
+    container.innerHTML = '<p>Loading products...</p>';
     
-    onSnapshot(q, (snapshot) => {
-        categories = snapshot.docs.map(d => ({
-            id: d.id,
-            ...d.data()
+    db.collection('products').orderBy('name', 'asc').onSnapshot((snapshot) => {
+        const products = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
         }));
-        renderCategoriesGrid();
-        updateCategorySelect();
-    }, (error) => {
-        console.error("Categories Listen Error:", error);
-    });
-}
-
-function renderCategoriesGrid() {
-    const grid = document.getElementById('categories-grid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-
-    if (categories.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--grey);">No categories found.</div>';
-        return;
-    }
-
-    categories.forEach(category => {
-        const categoryCard = document.createElement('div');
-        categoryCard.className = 'category-card';
         
-        categoryCard.innerHTML = `
-            <h3>${category.name}</h3>
-            <p>${category.description || 'No description'}</p>
-            <div class="category-actions">
-                <button class="action-btn btn-delete" onclick="confirmDeleteCategory('${category.id}', '${category.name.replace(/'/g, "\\'")}')">
-                    🗑 Delete
-                </button>
-            </div>
-        `;
-
-        grid.appendChild(categoryCard);
+        if (products.length === 0) {
+            container.innerHTML = '<p>No products found.</p>';
+            return;
+        }
+        
+        let html = '<table><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Description</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+        
+        products.forEach(product => {
+            const status = product.status || 'available';
+            const imageHtml = product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999;">No Image</div>';
+            
+            html += `
+                <tr>
+                    <td>${imageHtml}</td>
+                    <td>${product.name}</td>
+                    <td>${product.category || '---'}</td>
+                    <td>${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
+                    <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-done'}">${status.toUpperCase()}</span></td>
+                    <td>
+                        <button class="action-btn btn-delete" onclick="deleteProduct('${product.id}', '${product.name}')">🗑</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
     });
 }
 
-function updateCategorySelect() {
+// Load categories
+function loadCategories() {
+    const container = document.getElementById('categories-container');
+    container.innerHTML = '<p>Loading categories...</p>';
+    
+    db.collection('categories').orderBy('name', 'asc').onSnapshot((snapshot) => {
+        const categories = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        if (categories.length === 0) {
+            container.innerHTML = '<p>No categories found.</p>';
+            return;
+        }
+        
+        let html = '<div class="categories-grid">';
+        
+        categories.forEach(category => {
+            html += `
+                <div class="category-card">
+                    <h3>${category.name}</h3>
+                    <p>${category.description || 'No description'}</p>
+                    <div class="category-actions">
+                        <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+        // Update category select in product modal
+        updateCategorySelect(categories);
+    });
+}
+
+// Update category select
+function updateCategorySelect(categories) {
     const select = document.getElementById('product-category');
     if (!select) return;
     
-    // Clear existing options except the first one
+    // Clear existing options
     while (select.children.length > 1) {
         select.removeChild(select.lastChild);
     }
@@ -386,10 +261,9 @@ function updateCategorySelect() {
     });
 }
 
-// MODAL FUNCTIONS
+// Modal functions
 window.openAddProductModal = function() {
     document.getElementById('add-product-modal').style.display = 'flex';
-    updateCategorySelect(); // Refresh categories in select
 };
 
 window.closeAddProductModal = function() {
@@ -406,12 +280,12 @@ window.closeAddCategoryModal = function() {
     document.getElementById('add-category-form').reset();
 };
 
-// FORM SUBMISSIONS
+// Form submissions
 document.addEventListener('DOMContentLoaded', function() {
-    // Add Product Form
+    // Add product form
     const addProductForm = document.getElementById('add-product-form');
     if (addProductForm) {
-        addProductForm.addEventListener('submit', async (e) => {
+        addProductForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const productData = {
@@ -423,21 +297,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            try {
-                await addDoc(collection(db, 'products'), productData);
-                closeAddProductModal();
-                alert('Product added successfully!');
-            } catch (error) {
-                console.error('Error adding product:', error);
-                alert('Failed to add product. Check console.');
-            }
+            db.collection('products').add(productData)
+                .then(() => {
+                    closeAddProductModal();
+                    alert('Product added successfully!');
+                })
+                .catch(error => {
+                    console.error('Error adding product:', error);
+                    alert('Failed to add product. Check console.');
+                });
         });
     }
     
-    // Add Category Form
+    // Add category form
     const addCategoryForm = document.getElementById('add-category-form');
     if (addCategoryForm) {
-        addCategoryForm.addEventListener('submit', async (e) => {
+        addCategoryForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const categoryData = {
@@ -446,120 +321,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            try {
-                await addDoc(collection(db, 'categories'), categoryData);
-                closeAddCategoryModal();
-                alert('Category added successfully!');
-            } catch (error) {
-                console.error('Error adding category:', error);
-                alert('Failed to add category. Check console.');
-            }
+            db.collection('categories').add(categoryData)
+                .then(() => {
+                    closeAddCategoryModal();
+                    alert('Category added successfully!');
+                })
+                .catch(error => {
+                    console.error('Error adding category:', error);
+                    alert('Failed to add category. Check console.');
+                });
         });
     }
 });
 
-// DELETE FUNCTIONS FOR PRODUCTS AND CATEGORIES
-window.confirmDeleteProduct = function(id, name) {
-    if (confirm(`Are you sure you want to delete the product "${name}"? This action cannot be undone.`)) {
-        deleteProduct(id);
+// CRUD operations
+window.toggleStatus = function(id, currentStatus) {
+    const nextStatus = currentStatus === 'new' ? 'done' : 'new';
+    db.collection('contacts').doc(id).update({ status: nextStatus });
+};
+
+window.deleteInquiry = function(id, name) {
+    if (confirm(`Are you sure you want to delete the inquiry from ${name}?`)) {
+        db.collection('contacts').doc(id).delete();
     }
 };
 
-async function deleteProduct(id) {
-    try {
-        const docRef = doc(db, "products", id);
-        await deleteDoc(docRef);
-        console.log("Product successfully deleted");
-    } catch (err) {
-        console.error("Error deleting product:", err);
-        alert("Failed to delete product. Check console.");
-    }
-}
-
-window.confirmDeleteCategory = function(id, name) {
-    if (confirm(`Are you sure you want to delete the category "${name}"? This will also delete all products in this category. This action cannot be undone.`)) {
-        deleteCategory(id);
+window.deleteProduct = function(id, name) {
+    if (confirm(`Are you sure you want to delete the product "${name}"?`)) {
+        db.collection('products').doc(id).delete();
     }
 };
 
-async function deleteCategory(id) {
-    try {
-        // First, delete all products in this category
-        const productsInCategory = products.filter(p => p.category === categories.find(c => c.id === id)?.name);
-        for (const product of productsInCategory) {
-            await deleteDoc(doc(db, "products", product.id));
+window.deleteCategory = function(id, name) {
+    if (confirm(`Are you sure you want to delete the category "${name}"? This will also delete all products in this category.`)) {
+        // First delete all products in this category
+        db.collection('products').where('category', '==', name).get()
+            .then(snapshot => {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                return batch.commit();
+            })
+            .then(() => {
+                // Then delete the category
+                return db.collection('categories').doc(id).delete();
+            });
+    }
+};
+
+// Message viewer
+window.viewMsg = function(name, text) {
+    document.getElementById('msg-sender-name').textContent = "From: " + (name || 'Anonymous');
+    document.getElementById('msg-full-text').textContent = text || 'No message content.';
+    document.getElementById('msg-overlay').style.display = 'flex';
+};
+
+window.closeMsg = function() {
+    document.getElementById('msg-overlay').style.display = 'none';
+};
+
+// Initialize when page loads
+window.addEventListener('load', function() {
+    console.log('📄 Page fully loaded');
+    
+    // Wait for Firebase to be ready
+    setTimeout(() => {
+        if (typeof firebase !== 'undefined') {
+            if (initializeFirebase()) {
+                setupLogin();
+            }
+        } else {
+            console.error('❌ Firebase not loaded');
+            alert('Firebase library not loaded. Please refresh the page.');
         }
-        
-        // Then delete the category
-        const docRef = doc(db, "categories", id);
-        await deleteDoc(docRef);
-        console.log("Category and its products successfully deleted");
-    } catch (err) {
-        console.error("Error deleting category:", err);
-        alert("Failed to delete category. Check console.");
-    }
-}
-
-// Message Viewer
-window.viewMsg = function(name, text) {
-    const nameEl = document.getElementById('msg-sender-name');
-    const textEl = document.getElementById('msg-full-text');
-    const overlay = document.getElementById('msg-overlay');
-    
-    if (nameEl) nameEl.textContent = "From: " + (name || 'Anonymous');
-    if (textEl) textEl.textContent = text || 'No message content.';
-    if (overlay) overlay.style.display = 'flex';
-}
-
-window.closeMsg = function() {
-    const overlay = document.getElementById('msg-overlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// Handle Escape key to close message
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        window.closeMsg();
-        closeAddProductModal();
-        closeAddCategoryModal();
-    }
+    }, 1000);
 });
-
-// Message Viewer
-window.viewMsg = function(name, text) {
-    const nameEl = document.getElementById('msg-sender-name');
-    const textEl = document.getElementById('msg-full-text');
-    const overlay = document.getElementById('msg-overlay');
-    
-    if (nameEl) nameEl.textContent = "From: " + (name || 'Anonymous');
-    if (textEl) textEl.textContent = text || 'No message content.';
-    if (overlay) overlay.style.display = 'flex';
-}
-
-window.closeMsg = function() {
-    const overlay = document.getElementById('msg-overlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// Handle Escape key to close message
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') window.closeMsg();
-});
-
-// DELETE FUNCTIONALITY
-window.confirmDelete = function(id, name) {
-    if (confirm(`Are you sure you want to delete the inquiry from ${name}? This action cannot be undone.`)) {
-        deleteInquiry(id);
-    }
-};
-
-async function deleteInquiry(id) {
-    try {
-        const docRef = doc(db, "contacts", id);
-        await deleteDoc(docRef);
-        console.log("Document successfully deleted");
-    } catch (err) {
-        console.error("Error deleting document:", err);
-        alert("Failed to delete inquiry. Check console.");
-    }
-}

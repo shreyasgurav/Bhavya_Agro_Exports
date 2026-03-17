@@ -7,10 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <!-- LOGIN SCREEN -->
     <div id="login-screen">
         <div class="login-card">
@@ -23,9 +22,8 @@
         </div>
     </div>
 
-    <!-- MAIN ADMIN DASHBOARD -->
+    <!-- ADMIN DASHBOARD -->
     <div id="admin-dashboard" style="display: none;">
-        <!-- HEADER -->
         <header class="admin-header">
             <div class="header-left">
                 <h1>Bhavya Agro Exports Admin</h1>
@@ -35,81 +33,50 @@
             </div>
         </header>
 
-        <!-- NAVIGATION -->
         <nav class="admin-nav">
             <button class="nav-btn active" onclick="showSection('inbox')">📥 Inbox</button>
             <button class="nav-btn" onclick="showSection('products')">📦 Products</button>
             <button class="nav-btn" onclick="showSection('categories')">🏷️ Categories</button>
         </nav>
 
-        <!-- INBOX SECTION -->
         <section id="inbox-section" class="admin-section">
             <div class="section-header">
                 <h2>Inbox</h2>
                 <div id="count-badge" class="count-badge">0 new inquiries</div>
             </div>
-
-            <div class="table-container">
-                <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>City</th>
-                                <th>Phone</th>
-                                <th>Message</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inbox-tbody">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div id="inbox-container">
+                <p>Loading inquiries...</p>
             </div>
         </section>
 
-        <!-- PRODUCTS SECTION -->
         <section id="products-section" class="admin-section" style="display: none;">
             <div class="section-header">
                 <h2>Products</h2>
                 <button class="add-btn" onclick="openAddProductModal()">+ Add Product</button>
             </div>
-
-            <div class="table-container">
-                <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="products-tbody">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div id="products-container">
+                <p>Loading products...</p>
             </div>
         </section>
 
-        <!-- CATEGORIES SECTION -->
         <section id="categories-section" class="admin-section" style="display: none;">
             <div class="section-header">
                 <h2>Categories</h2>
                 <button class="add-btn" onclick="openAddCategoryModal()">+ Add Category</button>
             </div>
-
-            <div class="categories-grid" id="categories-grid">
-                <!-- Categories populated by JS -->
+            <div id="categories-container">
+                <p>Loading categories...</p>
             </div>
         </section>
+    </div>
+
+    <!-- MESSAGE OVERLAY -->
+    <div id="msg-overlay">
+        <div class="msg-box">
+            <h3 id="msg-sender-name">Message</h3>
+            <p id="msg-full-text"></p>
+            <button onclick="window.closeMsg()">Close</button>
+        </div>
     </div>
 
     <!-- ADD PRODUCT MODAL -->
@@ -117,30 +84,30 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Product</h3>
-                <button class="close-btn" onclick="closeAddProductModal()">&times;</button>
+                <button class="close-btn" onclick="closeAddProductModal()">×</button>
             </div>
             <form id="add-product-form">
                 <div class="form-group">
-                    <label for="product-name">Product Name</label>
+                    <label>Product Name</label>
                     <input type="text" id="product-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="product-category">Category</label>
+                    <label>Category</label>
                     <select id="product-category" required>
-                        <option value="">Select Category</option>
+                        <option value="">Select a category</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="product-description">Description</label>
-                    <textarea id="product-description" rows="4" required></textarea>
+                    <label>Description</label>
+                    <textarea id="product-description" rows="4"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="product-image">Product Image URL</label>
+                    <label>Image URL</label>
                     <input type="url" id="product-image" placeholder="https://example.com/image.jpg">
                 </div>
                 <div class="form-group">
-                    <label for="product-status">Status</label>
-                    <select id="product-status">
+                    <label>Status</label>
+                    <select id="product-status" required>
                         <option value="available">Available</option>
                         <option value="on-request">On Request</option>
                     </select>
@@ -158,16 +125,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Category</h3>
-                <button class="close-btn" onclick="closeAddCategoryModal()">&times;</button>
+                <button class="close-btn" onclick="closeAddCategoryModal()">×</button>
             </div>
             <form id="add-category-form">
                 <div class="form-group">
-                    <label for="category-name">Category Name</label>
+                    <label>Category Name</label>
                     <input type="text" id="category-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="category-description">Description</label>
-                    <textarea id="category-description" rows="3" required></textarea>
+                    <label>Description</label>
+                    <textarea id="category-description" rows="4"></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" onclick="closeAddCategoryModal()">Cancel</button>
@@ -177,31 +144,8 @@
         </div>
     </div>
 
-    <!-- MESSAGE OVERLAY -->
-    <div id="msg-overlay">
-        <div class="msg-box">
-            <h3 id="msg-sender-name">Message</h3>
-            <p id="msg-full-text"></p>
-            <button onclick="window.closeMsg()">Close</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
-<script>
-    // Wait for Firebase to be fully loaded
-    window.addEventListener('load', function() {
-        console.log('Page fully loaded, loading admin script...');
-        const script = document.createElement('script');
-        script.src = 'admin.js';
-        script.onload = function() {
-            console.log('Admin script loaded successfully');
-        };
-        script.onerror = function() {
-            console.error('Admin script failed to load');
-        };
-        document.head.appendChild(script);
-    });
-</script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
