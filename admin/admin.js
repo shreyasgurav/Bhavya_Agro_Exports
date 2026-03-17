@@ -77,19 +77,28 @@ function setupLogin() {
         
         if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
             console.log('✅ Login successful!');
+            console.log('🔥 Hiding login screen and showing dashboard...');
             sessionStorage.setItem('adminLoggedIn', 'true');
             loginScreen.style.display = 'none';
             adminDashboard.style.display = 'block';
+            console.log('✅ Dashboard should now be visible');
             
             // Initialize Firebase if not already done
             if (!db || !storage) {
+                console.log('🔥 Initializing Firebase...');
                 initializeFirebase();
             }
             
+            console.log('🔥 Initializing admin panel...');
             initializeAdmin();
         } else {
-            console.log('❌ Login failed');
+            console.log('❌ Login failed - credentials incorrect');
+            console.log('📝 Expected username:', AUTH.user);
+            console.log('📝 Expected password:', AUTH.pass);
+            console.log('📝 Actual username:', usernameInput.value);
+            console.log('📝 Actual password:', passwordInput.value);
             errorMsg.style.display = 'block';
+            console.log('✅ Error message should now be visible');
         }
     });
 }
@@ -97,6 +106,16 @@ function setupLogin() {
 // Initialize admin panel
 function initializeAdmin() {
     console.log('🚀 Initializing admin panel...');
+    
+    // Make sure Firebase is initialized before loading data
+    if (!db || !storage) {
+        console.log('🔥 Firebase not initialized, initializing now...');
+        if (!initializeFirebase()) {
+            console.error('❌ Firebase initialization failed');
+            return;
+        }
+    }
+    
     loadInbox();
     loadProducts();
     loadCategories();
@@ -201,9 +220,11 @@ function loadProducts() {
             let imageHtml;
             
             if (product.image && product.image !== '') {
+                const imgSrc = product.image.startsWith('http') ? product.image : '../' + product.image;
+                const hrefSrc = product.image.startsWith('http') ? product.image : '../' + product.image;
                 imageHtml = `<div class="product-thumbnail-wrapper">
-                    <a href="${product.image}" target="_blank" title="Click to view full image">
-                        <img src="${product.image}" alt="${product.name}" class="product-thumbnail">
+                    <a href="${hrefSrc}" target="_blank" title="Click to view full image">
+                        <img src="${imgSrc}" alt="${product.name}" class="product-thumbnail">
                     </a>
                 </div>`;
             } else {
@@ -421,9 +442,9 @@ window.editProduct = function(id) {
             
             // Open modal
             openAddProductModal();
-        });
+        }
     });
-};
+}
 
 // Update category select
 function updateCategorySelect(categories) {
