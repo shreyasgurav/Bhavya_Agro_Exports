@@ -1,0 +1,29 @@
+[
+  {
+    "origin": [
+      "http://localhost:8081",
+      "http://localhost:3000",
+      "http://127.0.0.1:8081",
+      "http://127.0.0.1:3000",
+      "https://bhavyaagroexports.com",
+      "https://www.bhavyaagroexports.com",
+      "https://bhavya-agro-exports.web.app",
+      "https://bhavya-agro-d3407.web.app"
+    ],
+    "method": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "HEAD",
+      "OPTIONS"
+    ],
+    "header": [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Cache-Control"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

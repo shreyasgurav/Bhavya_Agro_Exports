@@ -379,7 +379,7 @@ window.setUploadMode = function(mode) {
     }
 };
 
-// Image upload functionality
+// Image upload functionality with proper Firebase Storage API
 function handleImageUpload(file) {
     if (!file) {
         console.error('❌ No file provided for upload');
@@ -395,10 +395,10 @@ function handleImageUpload(file) {
         return;
     }
     
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (max 10MB for better reliability)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-        showToast('File too large. Please use images smaller than 5MB.', 'error');
+        showToast('File too large. Please use images smaller than 10MB.', 'error');
         return;
     }
     
@@ -411,34 +411,66 @@ function handleImageUpload(file) {
     }
     
     try {
-        const storageRef = storage.ref();
-        const fileName = `products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const uploadTask = storageRef.child(fileName).put(file);
+        // Create a unique filename with timestamp and random suffix
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const fileName = `products/${timestamp}_${randomSuffix}_${sanitizedName}`;
         
+        // Get storage reference
+        const storageRef = storage.ref();
+        const imageRef = storageRef.child(fileName);
+        
+        console.log('🔥 Uploading to:', fileName);
+        
+        // Use modern Firebase Storage API with proper metadata
+        const metadata = {
+            contentType: file.type,
+            cacheControl: 'public, max-age=31536000' // Cache for 1 year
+        };
+        
+        // Use uploadBytes for better reliability
+        const uploadTask = imageRef.put(file, metadata);
+        
+        // Monitor upload progress
         uploadTask.on('state_changed', (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log(`📊 Upload progress: ${progress.toFixed(1)}%`);
-            if (progressBar) progressBar.style.width = `${progress}%`;
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
         });
         
-        uploadTask.then((snapshot) => {
+        // Handle completion
+        uploadTask.then(async (snapshot) => {
             console.log('✅ Upload complete, getting download URL...');
-            return snapshot.ref.getDownloadURL();
-        }).then((downloadURL) => {
-            console.log('🔗 Download URL obtained:', downloadURL);
             
-            // Set the URL in the form field
-            const imageInput = document.getElementById('product-image');
-            if (imageInput) {
-                imageInput.value = downloadURL;
+            try {
+                // Get download URL with proper error handling
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                console.log('🔗 Download URL obtained:', downloadURL);
+                
+                // Set the URL in the form field
+                const imageInput = document.getElementById('product-image');
+                if (imageInput) {
+                    imageInput.value = downloadURL;
+                    // Trigger change event for any listeners
+                    imageInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                // Hide progress
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
+                
+                showToast('Image uploaded successfully!', 'success');
+                return downloadURL;
+                
+            } catch (urlError) {
+                console.error('❌ Error getting download URL:', urlError);
+                throw new Error('Upload completed but failed to get download URL');
             }
             
-            // Hide progress
-            if (progressContainer) {
-                progressContainer.style.display = 'none';
-            }
-            
-            showToast('Image uploaded successfully!', 'success');
         }).catch((error) => {
             console.error('❌ Upload failed:', error);
             
@@ -447,18 +479,52 @@ function handleImageUpload(file) {
                 progressContainer.style.display = 'none';
             }
             
-            // Provide specific error messages
-            let errorMessage = 'Upload failed. Try using URL instead.';
-            if (error.code === 'storage/unauthorized') {
-                errorMessage = 'Upload failed: No permission to upload files.';
-            } else if (error.code === 'storage/canceled') {
-                errorMessage = 'Upload was cancelled.';
-            } else if (error.code === 'storage/retry-limit-exceeded') {
-                errorMessage = 'Upload failed: Too many retry attempts.';
+            // Provide specific error messages based on Firebase error codes
+            let errorMessage = 'Upload failed. Please try again or use URL instead.';
+            
+            if (error.code) {
+                switch (error.code) {
+                    case 'storage/unauthorized':
+                        errorMessage = 'Upload failed: No permission to upload files. Check Firebase Storage rules.';
+                        break;
+                    case 'storage/canceled':
+                        errorMessage = 'Upload was cancelled.';
+                        break;
+                    case 'storage/retry-limit-exceeded':
+                        errorMessage = 'Upload failed: Too many retry attempts. Please try again later.';
+                        break;
+                    case 'storage/invalid-checksum':
+                        errorMessage = 'Upload failed: File corrupted during upload. Please try again.';
+                        break;
+                    case 'storage/unknown':
+                        errorMessage = 'Upload failed: Unknown error occurred. Please try again.';
+                        break;
+                    case 'storage/object-not-found':
+                        errorMessage = 'Upload failed: Storage location not found.';
+                        break;
+                    case 'storage/quota-exceeded':
+                        errorMessage = 'Upload failed: Storage quota exceeded. Please contact administrator.';
+                        break;
+                    case 'storage/unauthenticated':
+                        errorMessage = 'Upload failed: Not authenticated. Please check Firebase configuration.';
+                        break;
+                }
+            }
+            
+            // Check for CORS-related errors
+            if (error.message && (
+                error.message.includes('CORS') || 
+                error.message.includes('preflight') ||
+                error.message.includes('Access-Control-Allow-Origin')
+            )) {
+                errorMessage = 'Upload failed: CORS error. Check Firebase Storage CORS configuration.';
+                console.error('🌐 CORS Error detected. Make sure cors.json is applied to Firebase Storage bucket.');
             }
             
             showToast(errorMessage, 'error');
+            throw error;
         });
+        
     } catch (error) {
         console.error('❌ Upload error:', error);
         
@@ -468,6 +534,7 @@ function handleImageUpload(file) {
         }
         
         showToast('Upload failed. Please try again or use URL.', 'error');
+        throw error;
     }
 }
 
