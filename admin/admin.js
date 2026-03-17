@@ -1,5 +1,32 @@
-import { db, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, getDocs, setDoc } from '../js/firebase-config.js';
-// Force refresh - v4
+// Simple Firebase setup for local development
+let db;
+
+// Initialize Firebase when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFirebase();
+});
+
+function initializeFirebase() {
+    const firebaseConfig = {
+        apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
+        authDomain: "bhavya-agro-d3407.firebaseapp.com",
+        projectId: "bhavya-agro-d3407",
+        storageBucket: "bhavya-agro-d3407.firebasestorage.app",
+        messagingSenderId: "701815969630",
+        appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
+        measurementId: "G-GMV0NN4VKR"
+    };
+
+    // Wait for Firebase to be available
+    if (typeof firebase !== 'undefined') {
+        const app = firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        initializeAdminAfterFirebase();
+    } else {
+        // Retry after a short delay
+        setTimeout(initializeFirebase, 100);
+    }
+}
 
 // HARDCODED CREDENTIALS (for demonstration)
 const AUTH = {
@@ -8,12 +35,17 @@ const AUTH = {
 };
 
 // LOGIN LOGIC
-const loginBtn = document.getElementById('login-btn');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const errorMsg = document.getElementById('error-msg');
-const loginScreen = document.getElementById('login-screen');
-const adminDashboard = document.getElementById('admin-dashboard');
+let loginBtn, usernameInput, passwordInput, errorMsg, loginScreen, adminDashboard;
+
+// Initialize admin elements
+function initializeAdminElements() {
+    loginBtn = document.getElementById('login-btn');
+    usernameInput = document.getElementById('username');
+    passwordInput = document.getElementById('password');
+    errorMsg = document.getElementById('error-msg');
+    loginScreen = document.getElementById('login-screen');
+    adminDashboard = document.getElementById('admin-dashboard');
+}
 
 // Check if user is already logged in
 function checkLoginStatus() {
@@ -25,9 +57,6 @@ function checkLoginStatus() {
     }
 }
 
-// Call checkLoginStatus on page load
-checkLoginStatus();
-
 // Logout function
 window.logout = function() {
     sessionStorage.removeItem('adminLoggedIn');
@@ -38,18 +67,83 @@ window.logout = function() {
     errorMsg.style.display = 'none';
 };
 
-if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-        if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
-            // Save login state to session storage
-            sessionStorage.setItem('adminLoggedIn', 'true');
-            loginScreen.style.display = 'none';
-            adminDashboard.style.display = 'block';
-            initializeAdmin();
-        } else {
-            errorMsg.style.display = 'block';
-        }
-    });
+// Setup login button
+function setupLoginButton() {
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
+                // Save login state to session storage
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                loginScreen.style.display = 'none';
+                adminDashboard.style.display = 'block';
+                initializeAdmin();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        });
+    }
+}
+
+// Initialize admin after Firebase is ready
+function initializeAdminAfterFirebase() {
+    initializeAdminElements();
+    checkLoginStatus();
+    setupLoginButton();
+    
+    // Setup form submissions
+    setupForms();
+}
+
+// Setup form submissions
+function setupForms() {
+    // Add Product Form
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('product-name').value,
+                category: document.getElementById('product-category').value,
+                description: document.getElementById('product-description').value,
+                image: document.getElementById('product-image').value || '',
+                status: document.getElementById('product-status').value,
+                createdAt: new Date()
+            };
+            
+            try {
+                await db.collection('products').add(productData);
+                closeAddProductModal();
+                alert('Product added successfully!');
+            } catch (error) {
+                console.error('Error adding product:', error);
+                alert('Failed to add product. Check console.');
+            }
+        });
+    }
+    
+    // Add Category Form
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const categoryData = {
+                name: document.getElementById('category-name').value,
+                description: document.getElementById('category-description').value,
+                createdAt: new Date()
+            };
+            
+            try {
+                await db.collection('categories').add(categoryData);
+                closeAddCategoryModal();
+                alert('Category added successfully!');
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Failed to add category. Check console.');
+            }
+        });
+    }
 }
 
 // Initialize admin panel
@@ -80,9 +174,7 @@ window.showSection = function(section) {
 let inquiries = [];
 
 function initRealtimeInbox() {
-    const q = query(collection(db, "contacts"), orderBy("timestamp", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
+    db.collection("contacts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         inquiries = snapshot.docs.map(d => ({
             id: d.id,
             ...d.data()
@@ -151,8 +243,7 @@ function renderInboxTable() {
 async function toggleStatus(id, currentStatus) {
     const nextStatus = currentStatus === "new" ? "done" : "new";
     try {
-        const docRef = doc(db, "contacts", id);
-        await updateDoc(docRef, { status: nextStatus });
+        await db.collection("contacts").doc(id).update({ status: nextStatus });
     } catch (err) {
         console.error("Error updating status:", err);
         alert("Failed to update status. Check console.");
