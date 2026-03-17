@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhavya Agro Exports — Admin Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-btn { background: #C9973A; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Test</h1>
+    <button class="test-btn" onclick="testFirebase()">Test Firebase Connection</button>
+    <div id="test-result"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <script>
+        function testFirebase() {
+            const resultDiv = document.getElementById('test-result');
+            
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
+                    authDomain: "bhavya-agro-d3407.firebaseapp.com",
+                    projectId: "bhavya-agro-d3407",
+                    storageBucket: "bhavya-agro-d3407.firebasestorage.app",
+                    messagingSenderId: "701815969630",
+                    appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
+                    measurementId: "G-GMV0NN4VKR"
+                };
+
+                if (typeof firebase !== 'undefined') {
+                    const app = firebase.initializeApp(firebaseConfig);
+                    const db = firebase.firestore();
+                    resultDiv.innerHTML = '<p style="color: green;">✅ Firebase connected successfully!</p>';
+                } else {
+                    resultDiv.innerHTML = '<p style="color: red;">❌ Firebase not loaded</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: red;">❌ Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

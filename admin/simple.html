@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhavya Agro Exports — Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>Bhavya Agro Exports</h1>
+            <p>Admin Panel</p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-btn">Enter</button>
+            <div id="error-msg" class="error-msg">Incorrect username or password</div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" style="display: none;">
+        <header class="admin-header">
+            <div class="header-left">
+                <h1>Bhavya Agro Exports Admin</h1>
+            </div>
+            <div class="header-right">
+                <button onclick="logout()" class="logout-btn">Log out</button>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <button class="nav-btn active" onclick="showSection('inbox')">📥 Inbox</button>
+            <button class="nav-btn" onclick="showSection('products')">📦 Products</button>
+            <button class="nav-btn" onclick="showSection('categories')">🏷️ Categories</button>
+        </nav>
+
+        <section id="inbox-section" class="admin-section">
+            <div class="section-header">
+                <h2>Inbox</h2>
+                <div id="count-badge" class="count-badge">0 new inquiries</div>
+            </div>
+            <p>Admin panel loaded successfully! Firebase connection working.</p>
+        </section>
+
+        <section id="products-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Products</h2>
+            </div>
+            <p>Products section - coming soon!</p>
+        </section>
+
+        <section id="categories-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>Categories</h2>
+            </div>
+            <p>Categories section - coming soon!</p>
+        </section>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <script>
+        // Wait for Firebase to be fully loaded
+        window.addEventListener('load', function() {
+            console.log('Page fully loaded, checking Firebase...');
+            if (typeof firebase !== 'undefined') {
+                console.log('Firebase is available');
+                // Load our script after Firebase is ready
+                const script = document.createElement('script');
+                script.src = 'admin-simple.js';
+                script.onload = function() {
+                    console.log('Admin script loaded');
+                };
+                document.head.appendChild(script);
+            } else {
+                console.error('Firebase not available after page load');
+            }
+        });
+    </script>
+</body>
+</html>
