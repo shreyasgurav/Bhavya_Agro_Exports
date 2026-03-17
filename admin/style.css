@@ -1,0 +1,358 @@
+:root {
+    --cream: #F5F0E8;
+    --earth: #2C1A0E;
+    --gold: #C9973A;
+    --pale-gold: #FFF8EC;
+    --white: #FFFFFF;
+    --grey: #8E8E8E;
+    --green: #2E7D32;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--cream);
+    color: var(--earth);
+    min-height: 100vh;
+}
+
+/* LOGIN SCREEN */
+#login-screen {
+    position: fixed;
+    inset: 0;
+    background-color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.login-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(44, 26, 14, 0.1);
+}
+
+.login-card h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: var(--earth);
+}
+
+.login-card p {
+    font-size: 14px;
+    color: var(--grey);
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 16px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.login-card input:focus {
+    border-color: var(--gold);
+}
+
+.login-card button {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--gold);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.login-card button:hover {
+    opacity: 0.9;
+}
+
+.error-msg {
+    color: #D32F2F;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+}
+
+/* INBOX PAGE */
+#inbox-page {
+    display: none;
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.header-section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 400;
+}
+
+.count-badge {
+    background-color: var(--gold);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.table-container {
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: 100%;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background-color: #F9F9F9;
+    color: var(--grey);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 16px;
+    border-bottom: 1px solid #EEEEEE;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+td {
+    padding: 16px;
+    border-bottom: 1px solid #EEEEEE;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.row-new {
+    background-color: var(--pale-gold);
+}
+
+.row-done {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.msg-cell {
+    color: #555;
+    max-width: 350px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    font-size: 13px;
+}
+
+/* MESSAGE OVERLAY */
+#msg-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 26, 14, 0.4);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.msg-box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.msg-box h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #EEE;
+    padding-bottom: 10px;
+}
+
+.msg-box p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--earth);
+    margin-bottom: 25px;
+    white-space: pre-wrap;
+}
+
+.msg-box button {
+    width: 100%;
+    padding: 12px;
+    background: var(--earth);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.action-btn {
+    border: none;
+    padding: 6px 14px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+
+.btn-done {
+    background-color: var(--green);
+    color: white;
+}
+
+.btn-reopen {
+    background-color: #E0E0E0;
+    color: var(--earth);
+}
+
+.status-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 50px;
+    text-transform: uppercase;
+}
+
+.tag-new {
+    background-color: #C9973A22;
+    color: var(--gold);
+}
+
+.tag-done {
+    background-color: #EEEEEE;
+    color: var(--grey);
+}
+
+@media (max-width: 768px) {
+    #inbox-page {
+        padding: 20px 10px;
+    }
+
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .header-section h2 { 
+        font-size: 32px; 
+    }
+
+    /* TABLE TO CARDS */
+    .table-container {
+        background: transparent;
+        box-shadow: none;
+    }
+
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    tr {
+        background: var(--white);
+        margin-bottom: 20px;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    td {
+        border: none;
+        padding: 8px 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding-left: 0;
+        min-height: auto;
+    }
+
+    td::before {
+        content: attr(data-label);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--grey);
+        margin-bottom: 4px;
+        display: block;
+        font-weight: 700;
+    }
+
+    .msg-cell {
+        max-width: 100%;
+        font-size: 14px;
+    }
+
+    .action-btn {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+
+    .row-new {
+        border-left: 4px solid var(--gold);
+    }
+
+    .row-done {
+        opacity: 0.8;
+        text-decoration: none;
+    }
+    
+    .row-done td::before {
+        text-decoration: none;
+    }
+}
