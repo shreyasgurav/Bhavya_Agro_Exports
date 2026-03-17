@@ -588,7 +588,35 @@
     // Step 1: Render fallback immediately
     renderCatalog(FALLBACK_PRODUCTS);
 
-    // Step 2: Listen to Firestore real-time updates
+    // Step 2: Listen for broadcast messages from admin panel
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('bhavya-updates');
+      channel.onmessage = function(event) {
+        if (event.data.type === 'product-updated') {
+          console.log('📡 Received product update from admin, refreshing immediately...');
+          // Clear cache and refresh products
+          localStorage.removeItem('bhavya_products_cache');
+          fetchPublicProducts().then(products => {
+            allProducts = products;
+            renderCatalog(products);
+          });
+        }
+      };
+    }
+
+    // Listen for messages from iframes
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'product-updated') {
+        console.log('📡 Received product update from iframe, refreshing...');
+        localStorage.removeItem('bhavya_products_cache');
+        fetchPublicProducts().then(products => {
+          allProducts = products;
+          renderCatalog(products);
+        });
+      }
+    });
+
+    // Step 3: Listen to Firestore real-time updates
     onSnapshot(collection(db, 'products'), (snapshot) => {
       let freshProducts = [];
       snapshot.forEach(doc => {

@@ -465,6 +465,71 @@ function updateCategorySelect(categories) {
     });
 }
 
+// Clear product cache for real-time sync
+window.clearProductCache = function() {
+    console.log('🔄 Clearing product cache for real-time sync...');
+    
+    // Clear localStorage cache
+    localStorage.removeItem('bhavya_products_cache');
+    
+    // Send message to all windows/tabs to refresh
+    if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('bhavya-updates');
+        channel.postMessage({ type: 'product-updated', timestamp: Date.now() });
+        channel.close();
+    }
+    
+    // Also try to notify parent window if in iframe
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'product-updated', timestamp: Date.now() }, '*');
+    }
+};
+
+// Listen for cache clear messages
+if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('bhavya-updates');
+    channel.onmessage = function(event) {
+        if (event.data.type === 'product-updated') {
+            console.log('📡 Received product update notification, refreshing...');
+            // Reload products if admin panel is visible
+            if (document.getElementById('admin-dashboard').style.display !== 'none') {
+                loadProducts();
+            }
+        }
+    };
+}
+
+// Listen for messages from iframes
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'product-updated') {
+        console.log('📡 Received product update from iframe, refreshing...');
+        if (document.getElementById('admin-dashboard').style.display !== 'none') {
+            loadProducts();
+        }
+    }
+});
+
+// Toast notification system
+window.showToast = function(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    const container = document.querySelector('.toast-container') || (() => {
+        const container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        return container;
+    })();
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
 // Modal functions
 window.openAddProductModal = function() {
     document.getElementById('add-product-modal').style.display = 'flex';
@@ -582,7 +647,14 @@ window.deleteInquiry = function(id, name) {
 
 window.deleteProduct = function(id, name) {
     if (confirm(`Are you sure you want to delete the product "${name}"?`)) {
-        db.collection("products").doc(id).delete();
+        db.collection("products").doc(id).delete().then(() => {
+            // Clear cache for real-time sync
+            clearProductCache();
+            showToast('Product deleted successfully!', 'success');
+        }).catch(error => {
+            console.error('Error deleting product:', error);
+            showToast('Failed to delete product', 'error');
+        });
     }
 };
 
@@ -600,6 +672,15 @@ window.deleteCategory = function(id, name) {
             .then(() => {
                 // Then delete the category
                 return db.collection("categories").doc(id).delete();
+            })
+            .then(() => {
+                // Clear cache for real-time sync
+                clearProductCache();
+                showToast('Category and associated products deleted successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error deleting category:', error);
+                showToast('Failed to delete category', 'error');
             });
     }
 };
