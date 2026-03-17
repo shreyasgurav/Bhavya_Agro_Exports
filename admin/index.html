@@ -102,8 +102,26 @@
                     <textarea id="product-description" rows="4"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Image URL</label>
-                    <input type="url" id="product-image" placeholder="https://example.com/image.jpg">
+                    <label>Image</label>
+                    <div class="image-upload-container">
+                        <div class="upload-mode-toggle">
+                            <button type="button" class="mode-btn active" onclick="setUploadMode('file')">📎 Upload File</button>
+                            <button type="button" class="mode-btn" onclick="setUploadMode('url')">🔗 Paste URL</button>
+                        </div>
+                        <div id="file-upload-mode" class="upload-mode">
+                            <input type="file" id="product-image-file" accept=".jpg,.jpeg,.png,.webp" style="display: none;">
+                            <div class="upload-zone" onclick="document.getElementById('product-image-file').click()">
+                                <div class="upload-icon">📁</div>
+                                <p>Click to upload or drag image here</p>
+                                <div class="upload-progress" style="display: none;">
+                                    <div class="progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="url-upload-mode" class="upload-mode" style="display: none;">
+                            <input type="url" id="product-image" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Status</label>
@@ -146,6 +164,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script src="admin.js" defer></script>
 </body>
 </html>

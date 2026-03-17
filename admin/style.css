@@ -532,6 +532,254 @@ td {
     background: #B8852F;
 }
 
+/* IMAGE UPLOAD STYLES */
+.image-upload-container {
+    margin-top: 8px;
+}
+
+.upload-mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mode-btn {
+    background: transparent;
+    border: 1px solid #E0E0E0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.mode-btn:hover {
+    background: var(--pale-gold);
+    border-color: var(--gold);
+}
+
+.mode-btn.active {
+    background: var(--gold);
+    color: var(--white);
+    border-color: var(--gold);
+}
+
+.upload-mode {
+    margin-top: 8px;
+}
+
+.upload-zone {
+    border: 2px dashed #E0E0E0;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--pale-gold);
+}
+
+.upload-zone:hover {
+    border-color: var(--gold);
+    background: #FFF8E8;
+}
+
+.upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.upload-zone p {
+    color: var(--grey);
+    margin: 0;
+    font-size: 14px;
+}
+
+.upload-progress {
+    margin-top: 12px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #E0E0E0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--gold);
+    transition: width 0.3s ease;
+}
+
+/* ACTION BUTTONS IMPROVEMENTS */
+.action-btn {
+    background: transparent;
+    border: 1.5px solid #E0E0E0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 5px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--pale-gold);
+    border-color: var(--gold);
+}
+
+.action-btn.btn-delete {
+    border: 1.5px solid #dc2626;
+    color: #dc2626;
+}
+
+.action-btn.btn-delete:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: var(--white);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-btn:disabled:hover {
+    background: transparent;
+    border-color: #E0E0E0;
+}
+
+/* EDIT BUTTON (NEW) */
+.action-btn.btn-edit {
+    border: 1.5px solid #C9973A;
+    color: #C9973A;
+}
+
+.action-btn.btn-edit:hover {
+    background: #C9973A;
+    border-color: #C9973A;
+    color: var(--white);
+}
+
+/* STATUS BADGES */
+.status-tag.tag-unavailable {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+/* TABLE IMPROVEMENTS */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+th {
+    background: var(--pale-gold);
+    font-weight: 600;
+    color: var(--earth);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+}
+
+td {
+    font-size: 14px;
+    vertical-align: top;
+}
+
+/* IMAGE THUMBNAILS */
+.product-thumbnail {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.product-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.product-thumbnail-wrapper {
+    display: inline-block;
+    position: relative;
+}
+
+.product-thumbnail-wrapper a {
+    display: block;
+    text-decoration: none;
+}
+
+.product-placeholder {
+    width: 48px;
+    height: 48px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 20px;
+}
+
+/* TOAST NOTIFICATIONS */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+}
+
+.toast {
+    background: var(--gold);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease;
+    min-width: 200px;
+}
+
+.toast.success {
+    background: var(--green);
+}
+
+.toast.error {
+    background: var(--red);
+}
+
+.toast.warning {
+    background: #C9973A;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 /* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
     .admin-header {

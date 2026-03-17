@@ -18,13 +18,14 @@ const AUTH = {
     pass: "bhavya123"
 };
 
-let db;
+let db, storage;
 
 // Initialize Firebase
 function initializeFirebase() {
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
+        storage = firebase.storage();
         console.log('✅ Firebase initialized successfully');
         return true;
     } catch (error) {
@@ -183,16 +184,27 @@ function loadProducts() {
         
         products.forEach(product => {
             const status = product.status || 'available';
-            const imageHtml = product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999;">No Image</div>';
+            let imageHtml;
+            
+            if (product.image && product.image !== '') {
+                imageHtml = `<div class="product-thumbnail-wrapper">
+                    <a href="${product.image}" target="_blank" title="Click to view full image">
+                        <img src="${product.image}" alt="${product.name}" class="product-thumbnail">
+                    </a>
+                </div>`;
+            } else {
+                imageHtml = `<div class="product-placeholder">🖼</div>`;
+            }
             
             html += `
                 <tr>
                     <td>${imageHtml}</td>
                     <td>${product.name}</td>
                     <td>${product.category || '---'}</td>
-                    <td><a href="#" onclick="viewMsg('${product.name}', '${product.description}')">View</a></td>
-                    <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-done'}">${status.toUpperCase()}</span></td>
+                    <td>${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
+                    <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-unavailable'}">${status.toUpperCase()}</span></td>
                     <td>
+                        <button class="action-btn btn-edit" onclick="editProduct('${product.id}')">✏️</button>
                         <button class="action-btn btn-delete" onclick="deleteProduct('${product.id}', '${product.name}')">🗑</button>
                     </td>
                 </tr>
@@ -220,25 +232,44 @@ function loadCategories() {
             return;
         }
         
-        let html = '<div class="categories-grid">';
-        
-        categories.forEach(category => {
-            html += `
-                <div class="category-card">
-                    <h3>${category.name}</h3>
-                    <p>${category.description || 'No description'}</p>
-                    <div class="category-actions">
-                        <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+        // Derive categories from products collection
+        db.collection("products").get().then(productsSnapshot => {
+            const products = productsSnapshot.docs.map(doc => doc.data());
+            const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+            
+            let html = '<div class="categories-grid">';
+            
+            // Add categories from Firestore
+            categories.forEach(category => {
+                html += `
+                    <div class="category-card">
+                        <h3>${category.name}</h3>
+                        <p>${category.description || 'No description'}</p>
+                        <div class="category-actions">
+                            <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            });
+            
+            // Add categories derived from products
+            uniqueCategories.forEach(category => {
+                if (!categories.some(c => c.name === category.name)) {
+                    html += `
+                        <div class="category-card">
+                            <h3>${category.name}</h3>
+                            <p><em>Products in this category: ${products.filter(p => p.category === category.name).length}</em></p>
+                            <div class="category-actions">
+                                <button class="action-btn" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
         });
-        
-        html += '</div>';
-        container.innerHTML = html;
-        
-        // Update the shared categories file for website sync
-        updateCategoriesFile(categories);
         
         // Update category select in product modal
         updateCategorySelect(categories);
@@ -292,6 +323,94 @@ async function updateCategoriesFile(categories) {
     }
 }
 
+// Upload mode toggle
+window.setUploadMode = function(mode) {
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[onclick="setUploadMode('${mode}')"]`).classList.add('active');
+    
+    document.getElementById('file-upload-mode').style.display = mode === 'file' ? 'block' : 'none';
+    document.getElementById('url-upload-mode').style.display = mode === 'url' ? 'block' : 'none';
+};
+
+// Image upload functionality
+function handleImageUpload(file) {
+    if (!file) return;
+    
+    const progressBar = document.querySelector('.progress-bar');
+    const progressContainer = document.querySelector('.upload-progress');
+    progressContainer.style.display = 'block';
+    
+    const storageRef = storage.ref();
+    const fileName = `${Date.now()}_${file.name}`;
+    const uploadTask = storageRef.child(`products/${fileName}`).put(file);
+    
+    uploadTask.on('state_changed', (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        progressBar.style.width = `${progress}%`;
+    });
+    
+    uploadTask.then((snapshot) => {
+        return snapshot.ref.getDownloadURL();
+    }).then((downloadURL) => {
+        document.getElementById('product-image').value = downloadURL;
+        progressContainer.style.display = 'none';
+        showToast('Image uploaded successfully!', 'success');
+    }).catch((error) => {
+        console.error('Upload failed:', error);
+        progressContainer.style.display = 'none';
+        showToast('Upload failed. Try URL instead.', 'error');
+    });
+}
+
+// Toast notifications
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+        if (container.children.length === 0) {
+            container.remove();
+        }
+    }, 3000);
+}
+
+// Edit product functionality
+window.editProduct = function(id) {
+    db.collection("products").doc(id).get().then((doc) => {
+        if (doc.exists) {
+            const product = doc.data();
+            
+            // Pre-fill modal
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-category').value = product.category;
+            document.getElementById('product-description').value = product.description;
+            document.getElementById('product-image').value = product.image || '';
+            document.getElementById('product-status').value = product.status;
+            
+            // Change modal to edit mode
+            document.querySelector('#add-product-modal h3').textContent = 'Edit Product';
+            document.querySelector('#add-product-form button[type="submit"]').textContent = 'Save Changes';
+            
+            // Store editing state
+            window.editingProductId = id;
+            
+            // Open modal
+            openAddProductModal();
+        });
+    });
+};
+
 // Update category select
 function updateCategorySelect(categories) {
     const select = document.getElementById('product-category');
@@ -319,6 +438,9 @@ window.openAddProductModal = function() {
 window.closeAddProductModal = function() {
     document.getElementById('add-product-modal').style.display = 'none';
     document.getElementById('add-product-form').reset();
+    window.editingProductId = null;
+    document.querySelector('#add-product-modal h3').textContent = 'Add Product';
+    document.querySelector('#add-product-form button[type="submit"]').textContent = 'Add Product';
 };
 
 window.openAddCategoryModal = function() {
@@ -348,17 +470,36 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             try {
-                await db.collection("products").add(productData);
+                if (window.editingProductId) {
+                    // Update existing product
+                    await db.collection("products").doc(window.editingProductId).update(productData);
+                    showToast('Product updated successfully!', 'success');
+                } else {
+                    // Add new product
+                    await db.collection("products").add(productData);
+                    showToast('Product added successfully!', 'success');
+                }
+                
                 closeAddProductModal();
-                alert('Product added successfully!');
                 
                 // Trigger products-service.js cache clear for website sync
                 if (typeof clearProductCache === 'function') {
                     clearProductCache();
                 }
             } catch (error) {
-                console.error('Error adding product:', error);
-                alert('Failed to add product. Check console.');
+                console.error('Error saving product:', error);
+                showToast('Failed to save product. Check console.', 'error');
+            }
+        });
+    }
+    
+    // File upload handler
+    const fileInput = document.getElementById('product-image-file');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleImageUpload(file);
             }
         });
     }
@@ -378,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 await db.collection("categories").add(categoryData);
                 closeAddCategoryModal();
-                alert('Category added successfully!');
+                showToast('Category added successfully!', 'success');
                 
                 // Trigger products-service.js cache clear for website sync
                 if (typeof clearProductCache === 'function') {
@@ -386,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Error adding category:', error);
-                alert('Failed to add category. Check console.');
+                showToast('Failed to add category. Check console.', 'error');
             }
         });
     }
