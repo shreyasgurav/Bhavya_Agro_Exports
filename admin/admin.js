@@ -120,7 +120,7 @@ function loadInbox() {
     const container = document.getElementById('inbox-container');
     container.innerHTML = '<p>Loading inquiries...</p>';
     
-    db.collection('contacts').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+    db.collection("contacts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const inquiries = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -168,7 +168,7 @@ function loadProducts() {
     const container = document.getElementById('products-container');
     container.innerHTML = '<p>Loading products...</p>';
     
-    db.collection('products').orderBy('name', 'asc').onSnapshot((snapshot) => {
+    db.collection("products").orderBy("name", "asc").onSnapshot((snapshot) => {
         const products = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -190,7 +190,7 @@ function loadProducts() {
                     <td>${imageHtml}</td>
                     <td>${product.name}</td>
                     <td>${product.category || '---'}</td>
-                    <td>${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
+                    <td><a href="#" onclick="viewMsg('${product.name}', '${product.description}')">View</a></td>
                     <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-done'}">${status.toUpperCase()}</span></td>
                     <td>
                         <button class="action-btn btn-delete" onclick="deleteProduct('${product.id}', '${product.name}')">🗑</button>
@@ -209,7 +209,7 @@ function loadCategories() {
     const container = document.getElementById('categories-container');
     container.innerHTML = '<p>Loading categories...</p>';
     
-    db.collection('categories').orderBy('name', 'asc').onSnapshot((snapshot) => {
+    db.collection("categories").orderBy("name", "asc").onSnapshot((snapshot) => {
         const categories = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            db.collection('products').add(productData)
+            db.collection("products").add(productData)
                 .then(() => {
                     closeAddProductModal();
                     alert('Product added successfully!');
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: new Date()
             };
             
-            db.collection('categories').add(categoryData)
+            db.collection("categories").add(categoryData)
                 .then(() => {
                     closeAddCategoryModal();
                     alert('Category added successfully!');
@@ -337,25 +337,25 @@ document.addEventListener('DOMContentLoaded', function() {
 // CRUD operations
 window.toggleStatus = function(id, currentStatus) {
     const nextStatus = currentStatus === 'new' ? 'done' : 'new';
-    db.collection('contacts').doc(id).update({ status: nextStatus });
+    db.collection("contacts").doc(id).update({ status: nextStatus });
 };
 
 window.deleteInquiry = function(id, name) {
     if (confirm(`Are you sure you want to delete the inquiry from ${name}?`)) {
-        db.collection('contacts').doc(id).delete();
+        db.collection("contacts").doc(id).delete();
     }
 };
 
 window.deleteProduct = function(id, name) {
     if (confirm(`Are you sure you want to delete the product "${name}"?`)) {
-        db.collection('products').doc(id).delete();
+        db.collection("products").doc(id).delete();
     }
 };
 
 window.deleteCategory = function(id, name) {
     if (confirm(`Are you sure you want to delete the category "${name}"? This will also delete all products in this category.`)) {
         // First delete all products in this category
-        db.collection('products').where('category', '==', name).get()
+        db.collection("products").where('category', '==', name).get()
             .then(snapshot => {
                 const batch = db.batch();
                 snapshot.docs.forEach(doc => {
@@ -365,7 +365,7 @@ window.deleteCategory = function(id, name) {
             })
             .then(() => {
                 // Then delete the category
-                return db.collection('categories').doc(id).delete();
+                return db.collection("categories").doc(id).delete();
             });
     }
 };
