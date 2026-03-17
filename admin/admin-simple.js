@@ -1,5 +1,5 @@
-// Simplified admin.js for debugging
-console.log('Admin.js loaded');
+// ES Module version for Firebase integration
+console.log('Admin-simple.js loaded');
 
 // Firebase configuration
 const firebaseConfig = {
@@ -18,28 +18,20 @@ const AUTH = {
     pass: "bhavya123"
 };
 
+// Initialize Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Make db available globally
+window.db = db;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded');
-    
-    // Wait for Firebase to load
-    setTimeout(function() {
-        if (typeof firebase !== 'undefined') {
-            console.log('Firebase available, initializing...');
-            try {
-                firebase.initializeApp(firebaseConfig);
-                window.db = firebase.firestore();
-                console.log('Firebase initialized successfully');
-                setupLogin();
-            } catch (error) {
-                console.error('Firebase initialization error:', error);
-                alert('Firebase initialization failed: ' + error.message);
-            }
-        } else {
-            console.error('Firebase not available');
-            alert('Firebase library not loaded');
-        }
-    }, 1000);
+    setupLogin();
 });
 
 function setupLogin() {
