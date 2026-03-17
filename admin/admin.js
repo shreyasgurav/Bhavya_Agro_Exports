@@ -1,3 +1,6 @@
+// Simple Admin Panel - Fresh Start
+console.log('Admin panel loading...');
+
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
@@ -9,14 +12,29 @@ const firebaseConfig = {
     measurementId: "G-GMV0NN4VKR"
 };
 
-// Simple Admin Panel - Fresh Start
-console.log('Admin panel loading...');
-
 // Login credentials
 const AUTH = {
     user: "omkar",
     pass: "bhavya123"
 };
+
+let db, storage;
+
+// Initialize Firebase
+function initializeFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        storage = firebase.storage();
+        console.log('✅ Firebase initialized successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        return false;
+    }
+}
 
 // Login functionality
 function setupLogin() {
@@ -41,6 +59,11 @@ function setupLogin() {
         loginScreen.style.display = 'none';
         adminDashboard.style.display = 'block';
         
+        // Initialize Firebase if not already done
+        if (!db || !storage) {
+            initializeFirebase();
+        }
+        
         initializeAdmin();
         return;
     }
@@ -49,26 +72,33 @@ function setupLogin() {
     loginBtn.addEventListener('click', function(e) {
         e.preventDefault();
         console.log('🔥 LOGIN BUTTON CLICKED!');
-        console.log('📝 Username entered:', usernameInput.value);
-        console.log('🔑 Password entered:', passwordInput.value);
-        console.log('👤 Expected username:', AUTH.user);
-        console.log('🔐 Expected password:', AUTH.pass);
-        console.log('🔍 Username match:', usernameInput.value === AUTH.user);
-        console.log('🔍 Password match:', passwordInput.value === AUTH.pass);
+        console.log('📝 Username:', usernameInput.value);
+        console.log('🔑 Password:', passwordInput.value);
         
         if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
             console.log('✅ Login successful!');
+            console.log('🔥 Hiding login screen and showing dashboard...');
             sessionStorage.setItem('adminLoggedIn', 'true');
             loginScreen.style.display = 'none';
             adminDashboard.style.display = 'block';
+            console.log('✅ Dashboard should now be visible');
+            
+            // Initialize Firebase if not already done
+            if (!db || !storage) {
+                console.log('🔥 Initializing Firebase...');
+                initializeFirebase();
+            }
             
             console.log('🔥 Initializing admin panel...');
             initializeAdmin();
         } else {
             console.log('❌ Login failed - credentials incorrect');
-            console.log('❌ Username check failed:', usernameInput.value !== AUTH.user);
-            console.log('❌ Password check failed:', passwordInput.value !== AUTH.pass);
+            console.log('📝 Expected username:', AUTH.user);
+            console.log('📝 Expected password:', AUTH.pass);
+            console.log('📝 Actual username:', usernameInput.value);
+            console.log('📝 Actual password:', passwordInput.value);
             errorMsg.style.display = 'block';
+            console.log('✅ Error message should now be visible');
         }
     });
 }
@@ -76,6 +106,18 @@ function setupLogin() {
 // Initialize admin panel
 function initializeAdmin() {
     console.log('🚀 Initializing admin panel...');
+    
+    // Make sure Firebase is initialized before loading data
+    if (!db || !storage) {
+        console.log('🔥 Firebase not initialized, initializing now...');
+        if (!initializeFirebase()) {
+            console.error('❌ Firebase initialization failed');
+            return;
+        }
+    }
+    
+    // Initialize upload mode to file upload by default
+    setUploadMode('file');
     
     loadInbox();
     loadProducts();
@@ -95,25 +137,8 @@ window.showSection = function(section) {
     });
     
     // Show selected section and activate nav button
-    const target = document.getElementById(`${section}-section`);
-    if (target) {
-        target.style.display = 'block';
-    }
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-};
-
-// Logout
-window.logout = function() {
-    console.log('🚪 Logging out...');
-    sessionStorage.removeItem('adminLoggedIn');
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('admin-dashboard').style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    const errorMsg = document.getElementById('error-msg');
-    if (errorMsg) errorMsg.style.display = 'none';
+    document.getElementById(`${section}-section`).style.display = 'block';
+    event.target.classList.add('active');
 };
 
 // Logout
@@ -130,11 +155,9 @@ window.logout = function() {
 // Load inbox
 function loadInbox() {
     const container = document.getElementById('inbox-container');
-    if (!container) return;
     container.innerHTML = '<p>Loading inquiries...</p>';
     
-    const q = query(collection(db, "contacts"), orderBy("timestamp", "desc"));
-    onSnapshot(q, (snapshot) => {
+    db.collection("contacts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const inquiries = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -151,7 +174,7 @@ function loadInbox() {
         inquiries.forEach(inquiry => {
             const status = (inquiry.status || 'new').toLowerCase();
             const isNew = status === 'new';
-            const date = inquiry.timestamp ? (inquiry.timestamp.toDate ? inquiry.timestamp.toDate().toLocaleDateString() : new Date(inquiry.timestamp).toLocaleDateString()) : '---';
+            const date = inquiry.timestamp ? inquiry.timestamp.toDate().toLocaleDateString() : '---';
             
             html += `
                 <tr>
@@ -180,11 +203,9 @@ function loadInbox() {
 // Load products
 function loadProducts() {
     const container = document.getElementById('products-container');
-    if (!container) return;
     container.innerHTML = '<p>Loading products...</p>';
     
-    const q = query(collection(db, "products"), orderBy("name", "asc"));
-    onSnapshot(q, (snapshot) => {
+    db.collection("products").orderBy("name", "asc").onSnapshot((snapshot) => {
         const products = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -217,7 +238,7 @@ function loadProducts() {
                 <tr>
                     <td>${imageHtml}</td>
                     <td>${product.name}</td>
-                    <td>${product.categoryLabel || product.category || '---'}</td>
+                    <td>${product.category || '---'}</td>
                     <td>${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
                     <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-unavailable'}">${status.toUpperCase()}</span></td>
                     <td>
@@ -236,107 +257,218 @@ function loadProducts() {
 // Load categories
 function loadCategories() {
     const container = document.getElementById('categories-container');
-    if (!container) return;
     container.innerHTML = '<p>Loading categories...</p>';
     
-    const q = query(collection(db, "categories"), orderBy("order", "asc"));
-    onSnapshot(q, async (snapshot) => {
+    db.collection("categories").orderBy("name", "asc").onSnapshot((snapshot) => {
         const categories = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
         
         if (categories.length === 0) {
-            container.innerHTML = '<p>No categories found. Adding products will help derive them.</p>';
+            container.innerHTML = '<p>No categories found.</p>';
+            return;
         }
         
-        // Fetch products to find derived categories not yet in the 'categories' collection
-        const productsSnapshot = await getDocs(collection(db, "products"));
-        const products = productsSnapshot.docs.map(doc => doc.data());
-        const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
-        
-        let html = '<div class="categories-grid">';
-        
-        // Add categories from Firestore (editable)
-        categories.forEach(category => {
-            html += `
-                <div class="category-card">
-                    <h3>${category.label || category.name}</h3>
-                    <p>${category.description || 'No description'}</p>
-                    <div class="category-meta">
-                        <small><strong>ID:</strong> ${category.name}</small><br>
-                        <small><strong>Order:</strong> ${category.order || 99}</small>
-                    </div>
-                    <div class="category-actions">
-                        <button class="action-btn btn-edit" onclick="editCategory('${category.id}', '${category.name}', '${category.label || ''}', '${category.description || ''}', ${category.order || 99})">✏️ Edit</button>
-                        <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        // Add categories derived from products (read-only)
-        uniqueCategories.forEach(categoryName => {
-            if (!categories.some(c => c.name === categoryName)) {
-                const productCount = products.filter(p => p.category === categoryName).length;
+        // Derive categories from products collection
+        db.collection("products").get().then(productsSnapshot => {
+            const products = productsSnapshot.docs.map(doc => doc.data());
+            const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+            
+            let html = '<div class="categories-grid">';
+            
+            // Add categories from Firestore
+            categories.forEach(category => {
                 html += `
-                    <div class="category-card readonly">
-                        <h3>${categoryName}</h3>
-                        <p><em>Derived from products (${productCount} items)</em></p>
+                    <div class="category-card">
+                        <h3>${category.name}</h3>
+                        <p>${category.description || 'No description'}</p>
                         <div class="category-actions">
-                            <button class="action-btn" disabled>📊 ${productCount} Products</button>
-                            <button class="action-btn btn-convert" onclick="convertToCategory('${categoryName}')">🔄 Convert to Editable</button>
+                            <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
                         </div>
                     </div>
                 `;
-            }
+            });
+            
+            // Add categories derived from products
+            uniqueCategories.forEach(category => {
+                if (!categories.some(c => c.name === category.name)) {
+                    html += `
+                        <div class="category-card">
+                            <h3>${category.name}</h3>
+                            <p><em>Products in this category: ${products.filter(p => p.category === category.name).length}</em></p>
+                            <div class="category-actions">
+                                <button class="action-btn" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
         });
-        
-        html += '</div>';
-        container.innerHTML = html;
         
         // Update category select in product modal
         updateCategorySelect();
     });
 }
 
+// Update shared categories file for website sync
+async function updateCategoriesFile(categories) {
+    try {
+        // Fetch current categories from products-service.js
+        const response = await fetch('/js/products-service.js');
+        const text = await response.text();
+        
+        // Extract the current products array
+        const productsServiceMatch = text.match(/FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s);
+        if (productsServiceMatch) {
+            const currentProductsText = productsServiceMatch[1];
+            const currentProducts = JSON.parse(currentProductsText);
+            
+            // Get unique categories from current products
+            const uniqueCategories = [...new Set(currentProducts.map(p => p.category).filter(Boolean))];
+            
+            // Add new categories from admin panel
+            const adminCategories = categories.map(c => c.name);
+            const allCategories = [...new Set([...uniqueCategories, ...adminCategories])];
+            
+            // Update the products-service.js file
+            const updatedContent = text.replace(
+                /FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s,
+                `FALLBACK_PRODUCTS = [${allCategories.map(cat => 
+                    `  { id: "${cat.toLowerCase().replace(/\s+/g, '-')}", name: "${cat}", category: "${cat}", categoryLabel: "${cat}" }`
+                ).join(',\n')            }];\n`
+            );
+            
+            // Write back to the file
+            const blob = new Blob([updatedContent], { type: 'application/javascript' });
+            const newResponse = await fetch('/js/products-service.js', {
+                method: 'POST',
+                body: blob,
+                headers: { 'Content-Type': 'application/javascript' }
+            });
+            
+            if (newResponse.ok) {
+                console.log('✅ Categories file updated for website sync');
+            } else {
+                console.error('❌ Failed to update categories file');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error updating categories file:', error);
+    }
+}
+
 // Upload mode toggle
 window.setUploadMode = function(mode) {
+    console.log('🔀 Switching to upload mode:', mode);
+    
+    // Update button states
     document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[onclick="setUploadMode('${mode}')"]`).classList.add('active');
     
-    document.getElementById('file-upload-mode').style.display = mode === 'file' ? 'block' : 'none';
-    document.getElementById('url-upload-mode').style.display = mode === 'url' ? 'block' : 'none';
+    // Show/hide appropriate upload mode
+    if (mode === 'file') {
+        document.getElementById('file-upload-mode').style.display = 'block';
+        document.getElementById('url-upload-mode').style.display = 'none';
+    } else {
+        document.getElementById('file-upload-mode').style.display = 'none';
+        document.getElementById('url-upload-mode').style.display = 'block';
+    }
 };
 
 // Image upload functionality
 function handleImageUpload(file) {
-    if (!file) return;
+    if (!file) {
+        console.error('❌ No file provided for upload');
+        return;
+    }
+    
+    console.log('📁 Starting image upload:', file.name, file.type, file.size);
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showToast('Invalid file type. Please use JPG, PNG, or WebP images.', 'error');
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+        showToast('File too large. Please use images smaller than 5MB.', 'error');
+        return;
+    }
     
     const progressBar = document.querySelector('.progress-bar');
     const progressContainer = document.querySelector('.upload-progress');
-    progressContainer.style.display = 'block';
     
-    const storageRef = storage.ref();
-    const fileName = `${Date.now()}_${file.name}`;
-    const uploadTask = storageRef.child(`products/${fileName}`).put(file);
+    if (progressContainer) {
+        progressContainer.style.display = 'block';
+        if (progressBar) progressBar.style.width = '0%';
+    }
     
-    uploadTask.on('state_changed', (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        progressBar.style.width = `${progress}%`;
-    });
-    
-    uploadTask.then((snapshot) => {
-        return snapshot.ref.getDownloadURL();
-    }).then((downloadURL) => {
-        document.getElementById('product-image').value = downloadURL;
-        progressContainer.style.display = 'none';
-        showToast('Image uploaded successfully!', 'success');
-    }).catch((error) => {
-        console.error('Upload failed:', error);
-        progressContainer.style.display = 'none';
-        showToast('Upload failed. Try URL instead.', 'error');
-    });
+    try {
+        const storageRef = storage.ref();
+        const fileName = `products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadTask = storageRef.child(fileName).put(file);
+        
+        uploadTask.on('state_changed', (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log(`📊 Upload progress: ${progress.toFixed(1)}%`);
+            if (progressBar) progressBar.style.width = `${progress}%`;
+        });
+        
+        uploadTask.then((snapshot) => {
+            console.log('✅ Upload complete, getting download URL...');
+            return snapshot.ref.getDownloadURL();
+        }).then((downloadURL) => {
+            console.log('🔗 Download URL obtained:', downloadURL);
+            
+            // Set the URL in the form field
+            const imageInput = document.getElementById('product-image');
+            if (imageInput) {
+                imageInput.value = downloadURL;
+            }
+            
+            // Hide progress
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+            
+            showToast('Image uploaded successfully!', 'success');
+        }).catch((error) => {
+            console.error('❌ Upload failed:', error);
+            
+            // Hide progress
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+            
+            // Provide specific error messages
+            let errorMessage = 'Upload failed. Try using URL instead.';
+            if (error.code === 'storage/unauthorized') {
+                errorMessage = 'Upload failed: No permission to upload files.';
+            } else if (error.code === 'storage/canceled') {
+                errorMessage = 'Upload was cancelled.';
+            } else if (error.code === 'storage/retry-limit-exceeded') {
+                errorMessage = 'Upload failed: Too many retry attempts.';
+            }
+            
+            showToast(errorMessage, 'error');
+        });
+    } catch (error) {
+        console.error('❌ Upload error:', error);
+        
+        // Hide progress
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+        }
+        
+        showToast('Upload failed. Please try again or use URL.', 'error');
+    }
 }
 
 // Toast notifications
@@ -513,48 +645,6 @@ window.showToast = function(message, type = 'success') {
     }, 3000);
 };
 
-// Edit category functionality
-window.editCategory = function(id, name, label, description, order) {
-    console.log('🔧 Editing category:', id);
-    
-    // Pre-fill modal with category data
-    document.getElementById('category-name').value = name || '';
-    document.getElementById('category-label').value = label || '';
-    document.getElementById('category-description').value = description || '';
-    document.getElementById('category-order').value = order || 1;
-    
-    // Change modal to edit mode
-    document.querySelector('#add-category-modal h3').textContent = 'Edit Category';
-    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Save Changes';
-    
-    // Store editing state
-    window.editingCategoryId = id;
-    
-    // Open modal
-    openAddCategoryModal();
-};
-
-// Convert derived category to editable
-window.convertToCategory = function(categoryName) {
-    console.log('🔄 Converting category to editable:', categoryName);
-    
-    // Pre-fill modal with category name
-    document.getElementById('category-name').value = categoryName;
-    document.getElementById('category-label').value = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-    document.getElementById('category-description').value = `Products in the ${categoryName} category`;
-    document.getElementById('category-order').value = 99;
-    
-    // Change modal to conversion mode
-    document.querySelector('#add-category-modal h3').textContent = 'Convert to Editable Category';
-    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Convert Category';
-    
-    // Clear editing state (this is a new category)
-    window.editingCategoryId = null;
-    
-    // Open modal
-    openAddCategoryModal();
-};
-
 // Modal functions
 window.openAddProductModal = function() {
     console.log('🔓 Opening product modal...');
@@ -584,17 +674,8 @@ window.openAddCategoryModal = function() {
 };
 
 window.closeAddCategoryModal = function() {
-    console.log('🔒 Closing category modal...');
-    
     document.getElementById('add-category-modal').style.display = 'none';
     document.getElementById('add-category-form').reset();
-    
-    // Clear editing state
-    window.editingCategoryId = null;
-    
-    // Reset modal to "Add Category" mode
-    document.querySelector('#add-category-modal h3').textContent = 'Add Category';
-    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Add Category';
 };
 
 // Form submissions
@@ -677,13 +758,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // File upload handler
+    // File upload handler with drag-and-drop support
     const fileInput = document.getElementById('product-image-file');
+    const uploadZone = document.querySelector('.upload-zone');
+    
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 handleImageUpload(file);
+            }
+        });
+    }
+    
+    // Add drag-and-drop functionality
+    if (uploadZone) {
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageUpload(files[0]);
             }
         });
     }
@@ -694,76 +803,24 @@ document.addEventListener('DOMContentLoaded', function() {
         addCategoryForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Get form values
-            const name = document.getElementById('category-name').value.trim();
-            const label = document.getElementById('category-label').value.trim();
-            const description = document.getElementById('category-description').value.trim();
-            const order = parseInt(document.getElementById('category-order').value) || 1;
-            
-            // Validation
-            if (!name) {
-                showToast('Category name is required', 'error');
-                return;
-            }
-            
-            if (!label) {
-                showToast('Category label is required', 'error');
-                return;
-            }
-            
-            // Validate category name format (URL-friendly)
-            if (!/^[a-z0-9-]+$/.test(name)) {
-                showToast('Category name must be lowercase, alphanumeric, and hyphens only', 'error');
-                return;
-            }
-            
-            console.log('💾 Saving category:', { name, label, order });
-            
             const categoryData = {
-                name,
-                label,
-                description: description || '',
-                order,
-                updatedAt: new Date()
+                name: document.getElementById('category-name').value,
+                description: document.getElementById('category-description').value,
+                createdAt: new Date()
             };
             
-            // Only add createdAt for new categories
-            if (!window.editingCategoryId) {
-                categoryData.createdAt = new Date();
-            }
-            
             try {
-                if (window.editingCategoryId) {
-                    // Update existing category
-                    console.log('🔄 Updating category:', window.editingCategoryId);
-                    await db.collection("categories").doc(window.editingCategoryId).update(categoryData);
-                    showToast('Category updated successfully!', 'success');
-                    console.log('✅ Category updated in Firebase');
-                } else {
-                    // Add new category
-                    console.log('➕ Adding new category');
-                    const docRef = await db.collection("categories").add(categoryData);
-                    console.log('✅ Category added to Firebase with ID:', docRef.id);
-                    showToast('Category added successfully!', 'success');
-                }
-                
-                // Clear editing state
-                window.editingCategoryId = null;
-                
+                await db.collection("categories").add(categoryData);
                 closeAddCategoryModal();
+                showToast('Category added successfully!', 'success');
                 
-                // Clear cache for real-time sync
-                clearProductCache();
-                
-                // Refresh categories list
-                loadCategories();
-                
-                // Update product category dropdown
-                updateCategorySelect();
-                
+                // Trigger products-service.js cache clear for website sync
+                if (typeof clearProductCache === 'function') {
+                    clearProductCache();
+                }
             } catch (error) {
-                console.error('❌ Error saving category:', error);
-                showToast('Failed to save category. Check console for details.', 'error');
+                console.error('Error adding category:', error);
+                showToast('Failed to add category. Check console.', 'error');
             }
         });
     }
