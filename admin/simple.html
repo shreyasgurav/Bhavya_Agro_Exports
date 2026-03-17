@@ -88,6 +88,7 @@
         // Load our script after Firebase is ready
         const script = document.createElement('script');
         script.src = 'admin-simple.js';
+        script.type = 'module';
         script.onload = function() {
             console.log('Admin script loaded');
         };
