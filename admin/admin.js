@@ -1,4 +1,4 @@
-import { db, collection, onSnapshot, query, orderBy, doc, updateDoc } from '../js/firebase-config.js';
+import { db, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from '../js/firebase-config.js';
 
 // HARDCODED CREDENTIALS (for demonstration)
 const AUTH = {
@@ -82,6 +82,9 @@ function renderTable() {
                 <button class="action-btn ${isNew ? 'btn-done' : 'btn-reopen'}" data-id="${item.id}" data-current="${status}">
                     ${isNew ? '✓' : '↩'}
                 </button>
+                <button class="action-btn btn-delete" data-id="${item.id}" onclick="confirmDelete('${item.id}', '${item.name || 'Anonymous'}')">
+                    🗑
+                </button>
             </td>
         `;
 
@@ -126,3 +129,21 @@ window.closeMsg = function() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') window.closeMsg();
 });
+
+// DELETE FUNCTIONALITY
+window.confirmDelete = function(id, name) {
+    if (confirm(`Are you sure you want to delete the inquiry from ${name}? This action cannot be undone.`)) {
+        deleteInquiry(id);
+    }
+};
+
+async function deleteInquiry(id) {
+    try {
+        const docRef = doc(db, "contacts", id);
+        await deleteDoc(docRef);
+        console.log("Document successfully deleted");
+    } catch (err) {
+        console.error("Error deleting document:", err);
+        alert("Failed to delete inquiry. Check console.");
+    }
+}

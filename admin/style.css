@@ -252,6 +252,16 @@ td {
     color: var(--earth);
 }
 
+.btn-delete {
+    background-color: #D32F2F;
+    color: white;
+    margin-left: 4px;
+}
+
+.btn-delete:hover {
+    background-color: #B71C1C;
+}
+
 .status-tag {
     font-size: 10px;
     font-weight: 700;
@@ -341,6 +351,11 @@ td {
         padding: 12px;
         margin-top: 10px;
         border-radius: 8px;
+    }
+
+    .btn-delete {
+        margin-left: 0;
+        margin-top: 8px;
     }
 
     .row-new {
