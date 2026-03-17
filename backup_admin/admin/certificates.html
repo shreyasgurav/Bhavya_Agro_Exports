@@ -12,12 +12,12 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>VF</h1>
+      <h1>BA</h1>
       <p>Admin</p>
     </div>
     
     <div class="sidebar-user">
-      <div class="sidebar-user-name" id="adminName">Omkar Ghadgile</div>
+      <div class="sidebar-user-name" id="adminName">Omkar Gadghile</div>
       <div class="sidebar-user-role">Administrator</div>
     </div>
     
@@ -219,7 +219,7 @@
     }
     
     function loadCertifications(searchQuery = '') {
-      const certificates = VF.getAll('vf_certificates');
+      const certificates = BA.getAll('ba_certificates');
       
       const filtered = certificates.filter(certificate => {
         const matchesSearch = !searchQuery || 
@@ -297,7 +297,7 @@
       
       if (certificateId) {
         title.textContent = 'Edit Certificate';
-        const certificate = VF.getAll('vf_certificates').find(c => c.id === certificateId);
+        const certificate = BA.getAll('ba_certificates').find(c => c.id === certificateId);
         if (certificate) {
           document.getElementById('certificateName').value = certificate.name;
           document.getElementById('certificateAuthority').value = certificate.authority;
@@ -359,12 +359,12 @@
       };
       
       if (currentCertificateId) {
-        VF.update('vf_certificates', currentCertificateId, certificateData);
-        VF.log(`Certificate updated: ${certificateData.name}`);
+        BA.update('ba_certificates', currentCertificateId, certificateData);
+        BA.log(`Certificate updated: ${certificateData.name}`);
         showToast('Certificate updated successfully', 'success');
       } else {
-        VF.add('vf_certificates', certificateData);
-        VF.log(`Certificate added: ${certificateData.name}`);
+        BA.add('ba_certificates', certificateData);
+        BA.log(`Certificate added: ${certificateData.name}`);
         showToast('Certificate added successfully', 'success');
       }
       
@@ -377,14 +377,14 @@
     }
     
     function deleteCertificate(id) {
-      const certificate = VF.getAll('vf_certificates').find(c => c.id === id);
+      const certificate = BA.getAll('ba_certificates').find(c => c.id === id);
       if (certificate) {
         showConfirm(
           'Delete Certificate?',
           `Are you sure you want to delete "${certificate.name}"? This cannot be undone.`,
           () => {
-            VF.delete('vf_certificates', id);
-            VF.log(`Certificate deleted: ${certificate.name}`);
+            BA.delete('ba_certificates', id);
+            BA.log(`Certificate deleted: ${certificate.name}`);
             showToast('Certificate deleted successfully', 'success');
             loadCertifications();
           }
@@ -393,10 +393,10 @@
     }
     
     function toggleCertificateStatus(id) {
-      const certificate = VF.getAll('vf_certificates').find(c => c.id === id);
+      const certificate = BA.getAll('ba_certificates').find(c => c.id === id);
       if (certificate) {
-        VF.update('vf_certificates', id, { active: !certificate.active });
-        VF.log(`Certificate status changed: ${certificate.name} - ${!certificate.active ? 'Active' : 'Inactive'}`);
+        BA.update('ba_certificates', id, { active: !certificate.active });
+        BA.log(`Certificate status changed: ${certificate.name} - ${!certificate.active ? 'Active' : 'Inactive'}`);
         loadCertifications();
       }
     }
@@ -411,7 +411,7 @@
     }
     
     function updateBadges() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const newCount = enquiries.filter(e => e.status === 'new').length;
       document.getElementById('enquiryBadge').textContent = newCount;
       document.getElementById('notificationBadge').textContent = newCount;

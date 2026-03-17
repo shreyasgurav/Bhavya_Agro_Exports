@@ -26,7 +26,7 @@ function waitForEmailJS(callback) {
     waitForEmailJS(() => {});  // pre-warm EmailJS as early as possible
 
     // Validation structure
-    const fields = ['f-name', 'f-email', 'f-phone', 'f-city', 'f-message'];
+    const fields = ['f-name', 'f-phone', 'f-city', 'f-message'];
     
     // Clear errors on input
     fields.forEach(id => {
@@ -63,20 +63,14 @@ function waitForEmailJS(callback) {
     window.handleSubmit = async function() {
         let isValid = true;
         const name = document.getElementById('f-name').value.trim();
-        const email = document.getElementById('f-email').value.trim();
-        const phone = document.getElementById('f-phone').value.trim();
         const city = document.getElementById('f-city').value.trim();
+        const phone = document.getElementById('f-phone').value.trim();
         const message = document.getElementById('f-message').value.trim();
-        const company = document.getElementById('f-company').value.trim();
-        const type = document.getElementById('f-type').value;
-        const product = document.getElementById('f-product').value;
 
         // Validation
         if (!name) { showError('f-name', 'Name is required'); isValid = false; }
-        if (!email) { showError('f-email', 'Email is required'); isValid = false; }
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('f-email', 'Enter a valid email'); isValid = false; }
-        if (!phone) { showError('f-phone', 'Phone is required'); isValid = false; }
         if (!city) { showError('f-city', 'City is required'); isValid = false; }
+        if (!phone) { showError('f-phone', 'Phone is required'); isValid = false; }
         if (!message) { showError('f-message', 'Message is required'); isValid = false; }
         else if (message.length < 10) { showError('f-message', 'Min 10 characters required'); isValid = false; }
 
@@ -88,24 +82,16 @@ function waitForEmailJS(callback) {
 
         const templateParams = {
           name: name,
-          company: company,
-          email: email,
           phone: phone,
           city: city,
-          enquiry_type: type,
-          product_interest: product,
           message: message,
           time: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
         };
 
         const firebaseData = {
           name,
-          company,
-          email,
           phone,
           city,
-          enquiryType: type,
-          productInterest: product,
           message,
           timestamp: serverTimestamp(),
           formType: 'contact_page',

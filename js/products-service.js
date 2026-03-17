@@ -9,21 +9,21 @@ import {
 } from './firebase-config.js';
 
 const COLLECTION = 'products';
-const CACHE_KEY = 'vy_products_cache';
+const CACHE_KEY = 'bhavya_products_cache';
 const CACHE_TTL = 3600000; // 1 hour
 let cachedPublicProducts = null;
 
 // ── FALLBACK_PRODUCTS (Mirrors current live site content exactly) ──────────────
 export const FALLBACK_PRODUCTS = [
-  { id: 'safflower-oil', name: 'Cold Pressed Safflower Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'Pure, natural, and heart-healthy oil extracted at low temperatures to retain its essential nutrients and neutral aroma.', image: 'images/v-safflower-full.png', tag: 'Cold Pressed', status: 'available', order: 1 },
-  { id: 'sunflower-oil', name: 'Premium Sunflower Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'Crystal clear, light, and versatile cooking oil. High in Vitamin E and perfect for all culinary needs.', image: 'images/v-sunflower-full.png', tag: '', status: 'available', order: 2 },
-  { id: 'soya-oil', name: 'Refined Soya Bean Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'High-quality refined soya bean oil, perfect for cooking, baking, and industrial food applications.', image: 'images/v-soya-full.png', tag: '', status: 'available', order: 3 },
+  { id: 'safflower-oil', name: 'Cold Pressed Safflower Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'Pure, natural, and heart-healthy oil extracted at low temperatures to retain its essential nutrients and neutral aroma.', image: 'images/b-safflower-full.png', tag: 'Cold Pressed', status: 'available', order: 1 },
+  { id: 'sunflower-oil', name: 'Premium Sunflower Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'Crystal clear, light, and versatile cooking oil. High in Vitamin E and perfect for all culinary needs.', image: 'images/b-sunflower-full.png', tag: '', status: 'available', order: 2 },
+  { id: 'soya-oil', name: 'Refined Soya Bean Oil', category: 'oils', categoryLabel: 'Premium Oils', price: 'On Request', description: 'High-quality refined soya bean oil, perfect for cooking, baking, and industrial food applications.', image: 'images/b-soya-full.png', tag: '', status: 'available', order: 3 },
   { id: 'all-types-rice', name: 'All Types of Rice', category: 'grains', categoryLabel: 'Grains & Sugar', price: 'On Request', description: 'A premium selection of diverse rice varieties including Basmati, Jasmine, Sona Masoori, and Brown Rice.', image: 'images/all-types-rice.png', tag: 'Premium Varieties', status: 'available', order: 1 },
-  { id: 'gehu-wheat', name: 'Gehu (Golden Wheat)', category: 'grains', categoryLabel: 'Grains & Sugar', price: 'On Request', description: 'Premium quality wheat grains, high in protein and ideal for milling into superior quality flour.', image: 'images/gehu.jpg', tag: '', status: 'available', order: 2 },
-  { id: 'refined-sugar', name: 'Refined White Sugar', category: 'grains', categoryLabel: 'Grains & Sugar', price: 'On Request', description: 'High-grade refined granulated sugar, meeting international standards for purity and sweetness.', image: 'images/sugar.webp', tag: '', status: 'available', order: 3 },
-  { id: 'peanut-oil-cake', name: 'Peanut Oil Cake', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'Protein-rich groundnut cake, an excellent nutritional supplement for livestock and poultry feed.', image: 'images/peanut-oil-cake.jpg', tag: 'Animal Feed', status: 'available', order: 1 },
-  { id: 'cotton-oil-cake', name: 'Cotton Oil Cake', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'High-quality kapas cake, processed to ensure maximum nutritional value for dairy industries.', image: 'images/cotton-oil-cake.webp', tag: '', status: 'available', order: 2 },
-  { id: 'safflower-doc', name: 'Safflower De-oiled Cake (DOC)', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'Superior de-oiled cake meal, rich in fiber and protein, ideal for multi-purpose agricultural uses.', image: 'images/safflower-de-oiled-cake.jpeg', tag: '', status: 'available', order: 3 }
+  { id: 'gehu-wheat', name: 'Gehu (Golden Wheat)', category: 'grains', categoryLabel: 'Grains & Sugar', price: 'On Request', description: 'Premium quality wheat grains, high in protein and ideal for milling into superior quality flour.', image: 'images/gehu.png', tag: '', status: 'available', order: 2 },
+  { id: 'refined-sugar', name: 'Refined White Sugar', category: 'grains', categoryLabel: 'Grains & Sugar', price: 'On Request', description: 'High-grade refined granulated sugar, meeting international standards for purity and sweetness.', image: 'images/sugar.png', tag: '', status: 'available', order: 3 },
+  { id: 'peanut-oil-cake', name: 'Peanut Oil Cake', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'Protein-rich groundnut cake, an excellent nutritional supplement for livestock and poultry feed.', image: 'images/peanut-oil-cake.png', tag: 'Animal Feed', status: 'available', order: 1 },
+  { id: 'cotton-oil-cake', name: 'Cotton Oil Cake', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'High-quality kapas cake, processed to ensure maximum nutritional value for dairy industries.', image: 'images/cotton-oil-cake.png', tag: '', status: 'available', order: 2 },
+  { id: 'safflower-doc', name: 'Safflower De-oiled Cake (DOC)', category: 'cakes', categoryLabel: 'Oil Seed Cakes', price: 'On Request', description: 'Superior de-oiled cake meal, rich in fiber and protein, ideal for multi-purpose agricultural uses.', image: 'images/safflower-doc.png', tag: '', status: 'available', order: 3 }
 ];
 
 export function sortProducts(list) {

@@ -8,13 +8,13 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://w
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBu4MvRWhQuPaR9BmP0B-FCb6DISQ7P1YY",
-  authDomain: "vyankyaa-foods.firebaseapp.com",
-  projectId: "vyankyaa-foods",
-  storageBucket: "vyankyaa-foods.firebasestorage.app",
-  messagingSenderId: "468738165745",
-  appId: "1:468738165745:web:8de582791b376ab0071250",
-  measurementId: "G-45SB1V576F"
+  apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
+  authDomain: "bhavya-agro-d3407.firebaseapp.com",
+  projectId: "bhavya-agro-d3407",
+  storageBucket: "bhavya-agro-d3407.firebasestorage.app",
+  messagingSenderId: "701815969630",
+  appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
+  measurementId: "G-GMV0NN4VKR"
 };
 
 // Initialize Firebase (guard against duplicate init across modules)
@@ -27,7 +27,7 @@ try {
   app = getApp();
 }
 
-const db   = getFirestore(app, "vyankyaa-quotations");
+const db   = getFirestore(app); // Uses the (default) database in the new project
 const auth = getAuth(app);
 const storage = getStorage(app);
 

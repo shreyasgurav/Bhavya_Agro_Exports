@@ -12,12 +12,12 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>VF</h1>
+      <h1>BA</h1>
       <p>Admin</p>
     </div>
     
     <div class="sidebar-user">
-      <div class="sidebar-user-name" id="adminName">Omkar Ghadgile</div>
+      <div class="sidebar-user-name" id="adminName">Omkar Gadghile</div>
       <div class="sidebar-user-role">Administrator</div>
     </div>
     
@@ -325,7 +325,7 @@
     }
     
     function loadSettings() {
-      const settings = VF.getSettings();
+      const settings = BA.getSettings();
       
       // Load general settings
       document.getElementById('companyName').value = settings.companyName || '';
@@ -351,8 +351,8 @@
     }
     
     function loadFeaturedProducts() {
-      const products = VF.getAll('vf_products');
-      const settings = VF.getSettings();
+      const products = BA.getAll('ba_products');
+      const settings = BA.getSettings();
       const container = document.getElementById('featuredProducts');
       
       container.innerHTML = products.map(product => `
@@ -366,18 +366,18 @@
     }
     
     function toggleFeatured(productId) {
-      const products = VF.getAll('vf_products');
+      const products = BA.getAll('ba_products');
       const product = products.find(p => p.id === productId);
       if (product) {
-        VF.update('vf_products', productId, { featured: !product.featured });
-        VF.log(`Product featured status changed: ${product.name}`);
+        BA.update('ba_products', productId, { featured: !product.featured });
+        BA.log(`Product featured status changed: ${product.name}`);
         showToast('Featured products updated', 'success');
       }
     }
     
     function saveGeneralSettings() {
       const formData = new FormData(document.getElementById('generalForm'));
-      const settings = VF.getSettings();
+      const settings = BA.getSettings();
       
       // Update settings
       Object.assign(settings, {
@@ -390,14 +390,14 @@
         mapsUrl: formData.get('mapsUrl')
       });
       
-      VF.save('vf_settings', settings);
-      VF.log('General settings updated');
+      BA.save('ba_settings', settings);
+      BA.log('General settings updated');
       showToast('General settings saved successfully', 'success');
     }
     
     function saveProfileSettings() {
       const formData = new FormData(document.getElementById('profileForm'));
-      const settings = VF.getSettings();
+      const settings = BA.getSettings();
       
       const currentPassword = formData.get('currentPassword');
       const newPassword = formData.get('newPassword');
@@ -417,14 +417,14 @@
         
         // Update password
         settings.password = newPassword;
-        VF.log('Admin password changed');
+        BA.log('Admin password changed');
       }
       
       // Update admin name
       settings.adminName = formData.get('adminName');
       
-      VF.save('vf_settings', settings);
-      VF.log('Profile settings updated');
+      BA.save('ba_settings', settings);
+      BA.log('Profile settings updated');
       
       // Update admin name in sidebar
       document.getElementById('adminName').textContent = settings.adminName;
@@ -439,7 +439,7 @@
     
     function saveAppearanceSettings() {
       const formData = new FormData(document.getElementById('appearanceForm'));
-      const settings = VF.getSettings();
+      const settings = BA.getSettings();
       
       // Update settings
       Object.assign(settings, {
@@ -449,13 +449,13 @@
         footerTagline: formData.get('footerTagline')
       });
       
-      VF.save('vf_settings', settings);
-      VF.log('Appearance settings updated');
+      BA.save('ba_settings', settings);
+      BA.log('Appearance settings updated');
       showToast('Appearance settings saved successfully', 'success');
     }
     
     function updateBadges() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const newCount = enquiries.filter(e => e.status === 'new').length;
       document.getElementById('enquiryBadge').textContent = newCount;
       document.getElementById('notificationBadge').textContent = newCount;

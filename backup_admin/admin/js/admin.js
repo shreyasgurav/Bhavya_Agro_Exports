@@ -1,4 +1,4 @@
-// VF Admin - Auth Guard, Navigation, Cursor, Toast, Modals
+// Bhavya Agro Admin - Auth Guard, Navigation, Cursor, Toast, Modals
 window.showToast = function(message, type = 'info') {
   const container = document.querySelector('.toast-container') || createToastContainer();
   const toast = document.createElement('div');
@@ -169,5 +169,5 @@ document.addEventListener('DOMContentLoaded', function() {
   lucide.createIcons();
   
   // Seed data if needed
-  VF.seed();
+  BA.seed();
 });

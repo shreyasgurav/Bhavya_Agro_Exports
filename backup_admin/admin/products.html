@@ -12,12 +12,12 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>VF</h1>
+      <h1>BA</h1>
       <p>Admin</p>
     </div>
     
     <div class="sidebar-user">
-      <div class="sidebar-user-name" id="adminName">Omkar Ghadgile</div>
+      <div class="sidebar-user-name" id="adminName">Omkar Gadghile</div>
       <div class="sidebar-user-role">Administrator</div>
     </div>
     
@@ -302,7 +302,7 @@
     }
     
     function loadProducts(searchQuery = '') {
-      const products = VF.getAll('vf_products');
+      const products = BA.getAll('ba_products');
       const filtered = products.filter(product => {
         const matchesFilter = currentFilter === 'all' || product.category === currentFilter;
         const matchesSearch = !searchQuery || 
@@ -361,7 +361,7 @@
     }
     
     function loadCategories() {
-      const categories = VF.getAll('vf_categories');
+      const categories = BA.getAll('ba_categories');
       const select = document.getElementById('productCategory');
       
       select.innerHTML = '<option value="">Select category</option>' + 
@@ -375,7 +375,7 @@
       
       if (productId) {
         title.textContent = 'Edit Product';
-        const product = VF.getAll('vf_products').find(p => p.id === productId);
+        const product = BA.getAll('ba_products').find(p => p.id === productId);
         if (product) {
           document.getElementById('productName').value = product.name;
           document.getElementById('productCategory').value = product.category;
@@ -462,12 +462,12 @@
       };
       
       if (currentProductId) {
-        VF.update('vf_products', currentProductId, productData);
-        VF.log(`Product updated: ${productData.name}`);
+        BA.update('ba_products', currentProductId, productData);
+        BA.log(`Product updated: ${productData.name}`);
         showToast('Product updated successfully', 'success');
       } else {
-        VF.add('vf_products', productData);
-        VF.log(`Product added: ${productData.name}`);
+        BA.add('ba_products', productData);
+        BA.log(`Product added: ${productData.name}`);
         showToast('Product added successfully', 'success');
       }
       
@@ -480,14 +480,14 @@
     }
     
     function deleteProduct(id) {
-      const product = VF.getAll('vf_products').find(p => p.id === id);
+      const product = BA.getAll('ba_products').find(p => p.id === id);
       if (product) {
         showConfirm(
           'Delete Product?',
           `Are you sure you want to delete "${product.name}"? This cannot be undone.`,
           () => {
-            VF.delete('vf_products', id);
-            VF.log(`Product deleted: ${product.name}`);
+            BA.delete('ba_products', id);
+            BA.log(`Product deleted: ${product.name}`);
             showToast('Product deleted successfully', 'success');
             loadProducts();
           }
@@ -496,10 +496,10 @@
     }
     
     function toggleProductStatus(id) {
-      const product = VF.getAll('vf_products').find(p => p.id === id);
+      const product = BA.getAll('ba_products').find(p => p.id === id);
       if (product) {
-        VF.update('vf_products', id, { active: !product.active });
-        VF.log(`Product status changed: ${product.name} - ${!product.active ? 'Active' : 'Inactive'}`);
+        BA.update('ba_products', id, { active: !product.active });
+        BA.log(`Product status changed: ${product.name} - ${!product.active ? 'Active' : 'Inactive'}`);
         loadProducts();
       }
     }
@@ -514,7 +514,7 @@
     }
     
     function updateBadges() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const newCount = enquiries.filter(e => e.status === 'new').length;
       document.getElementById('enquiryBadge').textContent = newCount;
       document.getElementById('notificationBadge').textContent = newCount;

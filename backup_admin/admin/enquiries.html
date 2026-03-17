@@ -12,12 +12,12 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>VF</h1>
+      <h1>BA</h1>
       <p>Admin</p>
     </div>
     
     <div class="sidebar-user">
-      <div class="sidebar-user-name" id="adminName">Omkar Ghadgile</div>
+      <div class="sidebar-user-name" id="adminName">Omkar Gadghile</div>
       <div class="sidebar-user-role">Administrator</div>
     </div>
     
@@ -183,7 +183,7 @@
     }
     
     function loadEnquiries(searchQuery = '') {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const filtered = enquiries.filter(enquiry => {
         const matchesFilter = currentFilter === 'all' || enquiry.status === currentFilter;
         const matchesSearch = !searchQuery || 
@@ -251,7 +251,7 @@
     }
     
     function viewEnquiry(id) {
-      currentEnquiry = VF.getAll('vf_enquiries').find(e => e.id === id);
+      currentEnquiry = BA.getAll('ba_enquiries').find(e => e.id === id);
       if (!currentEnquiry) return;
       
       const modal = document.getElementById('enquiryModal');
@@ -341,10 +341,10 @@
     }
     
     function markAsReplied(id) {
-      const enquiry = VF.getAll('vf_enquiries').find(e => e.id === id);
+      const enquiry = BA.getAll('ba_enquiries').find(e => e.id === id);
       if (enquiry) {
-        VF.update('vf_enquiries', id, { status: 'replied' });
-        VF.log(`Enquiry marked as replied: ${enquiry.name} - ${enquiry.company}`);
+        BA.update('ba_enquiries', id, { status: 'replied' });
+        BA.log(`Enquiry marked as replied: ${enquiry.name} - ${enquiry.company}`);
         showToast('Enquiry marked as replied', 'success');
         loadEnquiries();
         updateBadges();
@@ -355,10 +355,10 @@
     }
     
     function archiveEnquiry(id) {
-      const enquiry = VF.getAll('vf_enquiries').find(e => e.id === id);
+      const enquiry = BA.getAll('ba_enquiries').find(e => e.id === id);
       if (enquiry) {
-        VF.update('vf_enquiries', id, { status: 'archived' });
-        VF.log(`Enquiry archived: ${enquiry.name} - ${enquiry.company}`);
+        BA.update('ba_enquiries', id, { status: 'archived' });
+        BA.log(`Enquiry archived: ${enquiry.name} - ${enquiry.company}`);
         showToast('Enquiry archived', 'success');
         loadEnquiries();
         updateBadges();
@@ -369,14 +369,14 @@
     }
     
     function deleteEnquiry(id) {
-      const enquiry = VF.getAll('vf_enquiries').find(e => e.id === id);
+      const enquiry = BA.getAll('ba_enquiries').find(e => e.id === id);
       if (enquiry) {
         showConfirm(
           'Delete Enquiry?',
           `Are you sure you want to delete the enquiry from "${enquiry.name}"? This cannot be undone.`,
           () => {
-            VF.delete('vf_enquiries', id);
-            VF.log(`Enquiry deleted: ${enquiry.name} - ${enquiry.company}`);
+            BA.delete('ba_enquiries', id);
+            BA.log(`Enquiry deleted: ${enquiry.name} - ${enquiry.company}`);
             showToast('Enquiry deleted successfully', 'success');
             loadEnquiries();
             updateBadges();
@@ -395,7 +395,7 @@
     }
     
     function exportCSV() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const csv = [
         ['Name', 'Company', 'Email', 'Phone', 'Country', 'Product', 'Type', 'Message', 'Status', 'Date'],
         ...enquiries.map(e => [
@@ -420,12 +420,12 @@
       a.click();
       window.URL.revokeObjectURL(url);
       
-      VF.log('Enquiries exported to CSV');
+      BA.log('Enquiries exported to CSV');
       showToast('Enquiries exported successfully', 'success');
     }
     
     function updateBadges() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const newCount = enquiries.filter(e => e.status === 'new').length;
       document.getElementById('enquiryBadge').textContent = newCount;
       document.getElementById('notificationBadge').textContent = newCount;

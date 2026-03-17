@@ -1,12 +1,12 @@
-// VF Admin - LocalStorage CRUD + Seed Data
-window.VF = {
+// Bhavya Agro Admin - LocalStorage CRUD + Seed Data
+window.BA = {
   // Basic CRUD operations
   getAll(key) {
     return JSON.parse(localStorage.getItem(key)) || [];
   },
   
   getSettings() {
-    return JSON.parse(localStorage.getItem('vf_settings')) || {};
+    return JSON.parse(localStorage.getItem('ba_settings')) || {};
   },
   
   save(key, data) {
@@ -45,7 +45,7 @@ window.VF = {
   
   // Activity logging
   log(action) {
-    const logs = this.getAll('vf_activity_log');
+    const logs = this.getAll('ba_activity_log');
     logs.unshift({
       action,
       ts: new Date().toLocaleString()
@@ -54,12 +54,12 @@ window.VF = {
     if (logs.length > 50) {
       logs.splice(50);
     }
-    this.save('vf_activity_log', logs);
+    this.save('ba_activity_log', logs);
   },
   
   // Seed data initialization
   seed() {
-    if (localStorage.getItem('vf_seeded')) return;
+    if (localStorage.getItem('ba_seeded')) return;
     
     // Products
     const products = [
@@ -323,11 +323,11 @@ window.VF = {
     const settings = {
       companyName: 'Bhavya Agro Exports',
       tagline: 'Exporting India\'s Best Flavors',
-      phone: '+91 91301 11989',
-      email: 'namaste.bhavyaagroexports@gmail.com',
-      address: 'Degloor, Dist. Nanded, Maharashtra — 431717, India',
+      phone: '+91 77750 77729',
+      email: 'bhavyaagroexports@gmail.com',
+      address: 'Shop No.4, Old Mondha, Ghadiyalgadh, Jalna - 431203',
       website: 'https://www.bhavyaagroexports.com',
-      adminName: 'Omkar Ghadgile',
+      adminName: 'Omkar Gadghile',
       username: 'admin',
       password: 'admin123',
       heroTagline: 'India\'s Finest Flavours',
@@ -337,15 +337,15 @@ window.VF = {
     };
     
     // Save all data
-    this.save('vf_products', products);
-    this.save('vf_categories', categories);
-    this.save('vf_certificates', certificates);
-    this.save('vf_enquiries', enquiries);
-    this.save('vf_settings', settings);
-    this.save('vf_activity_log', []);
+    this.save('ba_products', products);
+    this.save('ba_categories', categories);
+    this.save('ba_certificates', certificates);
+    this.save('ba_enquiries', enquiries);
+    this.save('ba_settings', settings);
+    this.save('ba_activity_log', []);
     
     // Mark as seeded
-    localStorage.setItem('vf_seeded', 'true');
+    localStorage.setItem('ba_seeded', 'true');
     
     // Log seeding
     this.log('Database seeded with initial data');

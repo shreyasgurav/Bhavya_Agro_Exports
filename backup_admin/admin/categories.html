@@ -12,12 +12,12 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>VF</h1>
+      <h1>BA</h1>
       <p>Admin</p>
     </div>
     
     <div class="sidebar-user">
-      <div class="sidebar-user-name" id="adminName">Omkar Ghadgile</div>
+      <div class="sidebar-user-name" id="adminName">Omkar Gadghile</div>
       <div class="sidebar-user-role">Administrator</div>
     </div>
     
@@ -224,8 +224,8 @@
     }
     
     function loadCategories(searchQuery = '') {
-      const categories = VF.getAll('vf_categories');
-      const products = VF.getAll('vf_products');
+      const categories = BA.getAll('ba_categories');
+      const products = BA.getAll('ba_products');
       
       const filtered = categories.filter(category => {
         const matchesSearch = !searchQuery || 
@@ -301,7 +301,7 @@
       
       if (categoryId) {
         title.textContent = 'Edit Category';
-        const category = VF.getAll('vf_categories').find(c => c.id === categoryId);
+        const category = BA.getAll('ba_categories').find(c => c.id === categoryId);
         if (category) {
           document.getElementById('categoryName').value = category.name;
           document.getElementById('categorySlug').value = category.slug;
@@ -363,12 +363,12 @@
       };
       
       if (currentCategoryId) {
-        VF.update('vf_categories', currentCategoryId, categoryData);
-        VF.log(`Category updated: ${categoryData.name}`);
+        BA.update('ba_categories', currentCategoryId, categoryData);
+        BA.log(`Category updated: ${categoryData.name}`);
         showToast('Category updated successfully', 'success');
       } else {
-        VF.add('vf_categories', categoryData);
-        VF.log(`Category added: ${categoryData.name}`);
+        BA.add('ba_categories', categoryData);
+        BA.log(`Category added: ${categoryData.name}`);
         showToast('Category added successfully', 'success');
       }
       
@@ -381,10 +381,10 @@
     }
     
     function deleteCategory(id) {
-      const category = VF.getAll('vf_categories').find(c => c.id === id);
+      const category = BA.getAll('ba_categories').find(c => c.id === id);
       if (category) {
         // Check if category has products
-        const products = VF.getAll('vf_products');
+        const products = BA.getAll('ba_products');
         const productCount = products.filter(p => p.category === category.name).length;
         
         const message = productCount > 0 
@@ -395,8 +395,8 @@
           'Delete Category?',
           message,
           () => {
-            VF.delete('vf_categories', id);
-            VF.log(`Category deleted: ${category.name}`);
+            BA.delete('ba_categories', id);
+            BA.log(`Category deleted: ${category.name}`);
             showToast('Category deleted successfully', 'success');
             loadCategories();
           }
@@ -405,10 +405,10 @@
     }
     
     function toggleCategoryStatus(id) {
-      const category = VF.getAll('vf_categories').find(c => c.id === id);
+      const category = BA.getAll('ba_categories').find(c => c.id === id);
       if (category) {
-        VF.update('vf_categories', id, { active: !category.active });
-        VF.log(`Category status changed: ${category.name} - ${!category.active ? 'Active' : 'Inactive'}`);
+        BA.update('ba_categories', id, { active: !category.active });
+        BA.log(`Category status changed: ${category.name} - ${!category.active ? 'Active' : 'Inactive'}`);
         loadCategories();
       }
     }
@@ -423,7 +423,7 @@
     }
     
     function updateBadges() {
-      const enquiries = VF.getAll('vf_enquiries');
+      const enquiries = BA.getAll('ba_enquiries');
       const newCount = enquiries.filter(e => e.status === 'new').length;
       document.getElementById('enquiryBadge').textContent = newCount;
       document.getElementById('notificationBadge').textContent = newCount;

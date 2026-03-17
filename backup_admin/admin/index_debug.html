@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bhavya Agro Admin — Central Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/icons.css">
+<script src="js/svg-icons.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow: hidden; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .status-badge { padding:3px 10px; border-radius:9999px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; }
+  .status-new { background:#eff6ff; color:#1d4ed8; }
+  .status-pending { background:#fff7ed; color:#c2410c; }
+  .status-resolved { background:#f0fdf4; color:#15803d; }
+  .status-contacted { background:#faf5ff; color:#7e22ce; }
+  .status-closed { background:#f1f5f9; color:#475569; }
+  .type-badge { padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+  .type-quote { background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; }
+  .type-contact { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .modal-overlay { opacity:0; visibility:hidden; transition:all .2s ease; overflow-y: auto; scrollbar-width: thin; }
+  .modal-overlay.open { opacity:1; visibility:visible; }
+  .modal-panel { transform:translateX(100%); transition:transform .25s ease; height: 100%; }
+  .modal-overlay.open .modal-panel { transform:translateX(0); }
+  .center-modal-panel { transform:scale(.95); transition:transform .2s ease; margin-top: auto; margin-bottom: auto; }
+  .modal-overlay.open .center-modal-panel { transform:scale(1); }
+  .toast { position:fixed; bottom:24px; right:24px; z-index:9999; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; color:white; display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,.15); transform:translateY(80px); opacity:0; transition:all .3s ease; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast-success { background:#16a34a; }
+  .toast-error { background:#dc2626; }
+  .toast-info { background:#0284c7; }
+  tr.row-fade { opacity:.4; transition:opacity .3s; }
+  .nav-link.active { background:rgba(52,211,153,.1); color:#34d399; font-weight:600; }
+  .nav-link { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; color:rgba(148,163,184,1); text-decoration:none; font-size:14px; transition:all .2s; }
+  .nav-link:hover:not(.active) { background:rgba(30,41,59,1); color:white; }
+  .action-btn { padding:5px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; transition:all .15s; border:none; }
+  .btn-view { background:#eff6ff; color:#1d4ed8; }
+  .btn-view:hover { background:#1d4ed8; color:white; }
+  .btn-resolve { background:#f0fdf4; color:#15803d; }
+  .btn-resolve:hover { background:#15803d; color:white; }
+  .btn-contact { background:#faf5ff; color:#7e22ce; }
+  .btn-contact:hover { background:#7e22ce; color:white; }
+  .btn-reply { background:#fff7ed; color:#c2410c; }
+  .btn-reply:hover { background:#c2410c; color:white; }
+  .btn-delete { background:#fef2f2; color:#dc2626; }
+  .btn-delete:hover { background:#dc2626; color:white; }
+</style>
+</head>
+<body class="h-screen w-full flex">
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast"><i id="toastIcon" class="bx bx-check-circle text-xl"></i><span id="toastMsg">Action completed</span></div>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="fixed inset-0 bg-[#0B1120] z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden my-auto">
+    <div class="bg-slate-50 px-8 py-6 border-b text-center">
+      <h1 class="text-xl font-black text-slate-800 tracking-tight">Bhavya Agro<span class="text-emerald-500">HQ</span></h1>
+      <p class="text-xs text-slate-500 mt-1">Authorized admin access only</p>
+    </div>
+    <div class="p-8">
+      <form id="loginForm" class="flex flex-col gap-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
+          <input type="email" id="adminEmail" required placeholder="admin@bhavyaagroexports.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Password</label>
+          <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all">
+        </div>
+        <button type="submit" id="loginBtn" class="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-700 transition-all mt-1">Login to Dashboard</button>
+      </form>
+
+
+      <div id="loginError" style="display:none;" class="mt-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium p-3 rounded-lg flex items-center gap-2">
+        <i class='bx bxs-error-circle'></i><span id="loginErrorText">Error</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-[#0B1120] flex flex-col h-full shrink-0 border-r border-slate-800">
+  <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+    <div class="w-9 h-9 bg-emerald-500/10 rounded-lg flex items-center justify-center p-1.5 border border-emerald-500/20 shrink-0">
+      <img src="/images/favicon.png" class="w-full h-full object-contain" alt="B">
+    </div>
+    <div>
+      <h1 class="text-base font-black text-white leading-tight">Bhavya Agro<span class="text-emerald-400">HQ</span></h1>
+      <p class="text-[10px] text-slate-500 font-medium">Admin Dashboard</p>
+    </div>
+  </div>
+  <div class="px-3 py-4 flex-1 overflow-y-auto">
+    <p class="px-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2">Main</p>
+    <nav id="sidebarNav" class="space-y-0.5">
+      <a href="#" class="nav-link active" data-target="dash-overview"><i class='bx bxs-dashboard'></i><span>Dashboard</span></a>
+      <a href="#" class="nav-link" data-target="dash-enquiries"><i class='bx bx-list-ul'></i><span>All Enquiries</span><span id="badge-enq" class="ml-auto bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full hidden">0</span></a>
+      <a href="#" class="nav-link" data-target="dash-quotes"><i class='bx bx-file-blank'></i><span>Quotations</span></a>
+      <a href="#" class="nav-link" data-target="dash-contacts"><i class='bx bx-envelope'></i><span>Messages</span></a>
+      <a href="#" class="nav-link" data-target="dash-leads"><i class='bx bx-group'></i><span>Leads & Customers</span></a>
+    </nav>
+    <p class="px-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-5 mb-2">Manage</p>
+    <nav class="space-y-0.5">
+      <a href="#" class="nav-link" data-target="dash-products"><i class='bx bx-box'></i><span>Products</span></a>
+      <a href="#" class="nav-link" data-target="dash-reports"><i class='bx bx-bar-chart-alt-2'></i><span>Reports</span></a>
+      <a href="#" class="nav-link" data-target="dash-settings"><i class='bx bx-slider-alt'></i><span>Settings</span></a>
+    </nav>
+  </div>
+  <div class="p-3 border-t border-slate-800">
+    <a href="/" target="_blank" class="nav-link text-slate-500 text-xs mb-1"><i class='bx bx-link-external'></i><span>View Live Site</span></a>
+    <a href="#" id="logoutBtn" class="nav-link hover:!bg-red-500/10 hover:!text-red-400"><i class='bx bx-log-out'></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN AREA -->
+<main class="flex-1 flex flex-col h-full overflow-hidden">
+  <!-- TOPBAR -->
+  <header class="h-14 bg-white border-b border-slate-200 flex items-center px-6 gap-4 shrink-0">
+    <div class="flex-1 flex items-center bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 max-w-md focus-within:bg-white focus-within:border-blue-400 transition-all">
+      <i class='bx bx-search text-slate-400'></i>
+      <input type="text" id="globalSearch" placeholder="Search customers, products, cities..." class="bg-transparent outline-none ml-2 w-full text-sm text-slate-700 placeholder-slate-400">
+    </div>
+    <button onclick="switchNav('dash-overview')" class="ml-auto text-slate-500 hover:text-slate-800 text-sm font-medium flex items-center gap-1.5 hover:bg-slate-100 px-3 py-2 rounded-lg transition">
+      <i class='bx bxs-dashboard'></i> Overview
+    </button>
+    <button id="notifBtn" onclick="showToast('No new notifications', 'info')" class="relative bg-slate-100 text-slate-500 hover:text-slate-800 p-2 rounded-full transition">
+      <i class='bx bxs-bell text-xl'></i>
+      <span class="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+    </button>
+  </header>
+
+  <!-- VIEWS -->
+  <div class="flex-1 overflow-y-auto p-6" id="mainViews">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="dash-overview" class="tab-content active max-w-7xl mx-auto pb-10">
+      <div class="flex justify-between items-end mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Business Overview</h2>
+          <p class="text-sm text-slate-500 mt-0.5" id="currentDateDisplay"></p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="generateReport()" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition flex items-center gap-2 shadow-sm"><i class='bx bxs-file-export'></i> Export Excel</button>
+          <button onclick="openMakeQuoteModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm"><i class='bx bx-plus'></i> New Quote</button>
+        </div>
+      </div>
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div onclick="switchNav('dash-enquiries')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
+          <div class="flex justify-between items-center mb-3">
+            <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-xl group-hover:bg-blue-100 transition"><i class='bx bx-list-ul'></i></div>
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">All Time</span>
+          </div>
+          <div class="text-3xl font-black text-slate-800 mb-0.5" id="m-enq">—</div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total Enquiries</div>
+        </div>
+        <div onclick="switchNav('dash-quotes')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
+          <div class="flex justify-between items-center mb-3">
+            <div class="w-10 h-10 bg-pink-50 text-pink-500 rounded-xl flex items-center justify-center text-xl group-hover:bg-pink-100 transition"><i class='bx bxs-file-blank'></i></div>
+            <span class="text-[10px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full">Requests</span>
+          </div>
+          <div class="text-3xl font-black text-slate-800 mb-0.5" id="m-quo">—</div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Quotations</div>
+        </div>
+        <div class="bg-orange-50 p-5 rounded-2xl border border-orange-100 shadow-sm hover:shadow-md transition group">
+          <div class="flex justify-between items-center mb-3">
+            <div class="w-10 h-10 bg-orange-100 text-orange-500 rounded-xl flex items-center justify-center text-xl"><i class='bx bx-time-five'></i></div>
+            <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Urgent</span>
+          </div>
+          <div class="text-3xl font-black text-orange-600 mb-0.5" id="m-pen">—</div>
+          <div class="text-[11px] font-bold text-orange-400 uppercase tracking-widest">Pending</div>
+        </div>
+        <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition group">
+          <div class="flex justify-between items-center mb-3">
+            <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class='bx bx-check-shield'></i></div>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Closed</span>
+          </div>
+          <div class="text-3xl font-black text-emerald-700 mb-0.5" id="m-con">—</div>
+          <div class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">Resolved</div>
+        </div>
+      </div>
+      <!-- Recent Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+          <div><h3 class="font-bold text-slate-800">Recent Activity</h3><p class="text-xs text-slate-500">Latest 6 submissions</p></div>
+          <button onclick="switchNav('dash-enquiries')" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700">View all &rarr;</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200">
+              <tr><th class="px-5 py-3 text-left">Date</th><th class="px-5 py-3 text-left">Type</th><th class="px-5 py-3 text-left">Subject</th><th class="px-5 py-3 text-left">Customer</th><th class="px-5 py-3 text-left">Status</th><th class="px-5 py-3 text-right">Action</th></tr>
+            </thead>
+            <tbody id="dashRecentTable" class="divide-y divide-slate-100 text-slate-700">
+              <tr><td colspan="6" class="px-5 py-8 text-center text-slate-400"><i class='bx bx-loader-alt bx-spin mr-2'></i>Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALL ENQUIRIES ── -->
+    <div id="dash-enquiries" class="tab-content max-w-7xl mx-auto pb-10">
+      <div class="flex justify-between items-end mb-5">
+        <div><h2 class="text-2xl font-bold text-slate-900">All Enquiries</h2><p class="text-sm text-slate-500">All submissions combined — quotations & contact messages</p></div>
+        <button onclick="exportTableExcel('fullEnquiriesTable','enquiries')" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 flex items-center gap-2 shadow-sm"><i class='bx bxs-file-export'></i> Export Excel</button>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-center">
+        <div class="relative"><i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400'></i><input type="text" id="filterSearch" placeholder="Search..." class="border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm w-60 outline-none focus:border-blue-500"></div>
+        <select id="filterStatus" class="border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 outline-none bg-slate-50"><option value="">All Status</option><option value="new">New</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="contacted">Contacted</option></select>
+        <select id="filterType" class="border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 outline-none bg-slate-50"><option value="">All Types</option><option value="quotations">Quotations</option><option value="contacts">Messages</option></select>
+        <select id="filterSort" class="border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 outline-none bg-slate-50"><option value="newest">Newest First</option><option value="oldest">Oldest First</option></select>
+        <button onclick="resetFilters()" class="ml-auto text-slate-500 text-xs font-semibold hover:text-slate-700 flex items-center gap-1"><i class='bx bx-reset'></i> Reset</button>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm" id="fullEnquiriesTableWrap">
+            <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr><th class="px-5 py-3 text-left">Date</th><th class="px-5 py-3 text-left">Customer</th><th class="px-5 py-3 text-left">Context</th><th class="px-5 py-3 text-left">City</th><th class="px-5 py-3 text-left">Status</th><th class="px-5 py-3 text-right">Actions</th></tr>
+            </thead>
+            <tbody id="fullEnquiriesTable" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+        <div class="px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50">
+          <span id="tableCount">Showing 0 results</span>
+          <div class="flex gap-1">
+            <button id="btnPrev" onclick="changePage(-1)" class="px-3 py-1.5 border border-slate-200 rounded bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed" disabled>← Prev</button>
+            <span id="pageIndicator" class="px-3 py-1.5 text-slate-600 font-semibold">1</span>
+            <button id="btnNext" onclick="changePage(1)" class="px-3 py-1.5 border border-slate-200 rounded bg-white hover:bg-slate-100 disabled:opacity-40" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── QUOTATIONS ── -->
+    <div id="dash-quotes" class="tab-content max-w-7xl mx-auto pb-10">
+      <div class="flex justify-between items-end mb-5">
+        <div><h2 class="text-2xl font-bold text-slate-900">Quotation Requests</h2><p class="text-sm text-slate-500">Manage all pricing and product quote requests</p></div>
+        <button onclick="openMakeQuoteModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 flex items-center gap-2 shadow-sm"><i class='bx bx-plus'></i> New Quote</button>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+          <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b"><tr><th class="px-5 py-3 text-left">Date</th><th class="px-5 py-3 text-left">Customer</th><th class="px-5 py-3 text-left">Product</th><th class="px-5 py-3 text-left">City</th><th class="px-5 py-3 text-left">Status</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
+          <tbody id="quotesTable" class="divide-y divide-slate-100 text-slate-700"><tr><td colspan="6" class="px-5 py-8 text-center text-slate-400"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div id="dash-contacts" class="tab-content max-w-7xl mx-auto pb-10">
+      <div class="flex justify-between items-end mb-5">
+        <div><h2 class="text-2xl font-bold text-slate-900">Contact Messages</h2><p class="text-sm text-slate-500">Manage all inbound customer messages</p></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+          <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b"><tr><th class="px-5 py-3 text-left">Date</th><th class="px-5 py-3 text-left">Name</th><th class="px-5 py-3 text-left">Email</th><th class="px-5 py-3 text-left">Subject</th><th class="px-5 py-3 text-left">City</th><th class="px-5 py-3 text-left">Status</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
+          <tbody id="contactsTable" class="divide-y divide-slate-100 text-slate-700"><tr><td colspan="7" class="px-5 py-8 text-center text-slate-400"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── LEADS ── -->
+    <div id="dash-leads" class="tab-content max-w-7xl mx-auto pb-10">
+      <div class="flex justify-between items-end mb-5">
+        <div><h2 class="text-2xl font-bold text-slate-900">Leads & Customers</h2><p class="text-sm text-slate-500">Everyone who has contacted Bhavya Agro Exports</p></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+          <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b"><tr><th class="px-5 py-3 text-left">Name</th><th class="px-5 py-3 text-left">Email</th><th class="px-5 py-3 text-left">Phone</th><th class="px-5 py-3 text-left">City</th><th class="px-5 py-3 text-left">Enquiries</th><th class="px-5 py-3 text-left">Tag</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
+          <tbody id="leadsTable" class="divide-y divide-slate-100 text-slate-700"><tr><td colspan="7" class="px-5 py-8 text-center text-slate-400"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTS ── -->
+    <div id="dash-products" class="tab-content max-w-7xl mx-auto pb-10">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Product Management</h2>
+          <p class="text-sm text-slate-500">Drag items to reorder. Changes sync live instantly.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="relative min-w-[240px]">
+            <i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400'></i>
+            <input type="text" id="productSearch" oninput="window.renderProductsTable()" placeholder="Search products..." class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+          </div>
+          <button onclick="openAddProductModal()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-0.5"><i class='bx bx-plus-circle text-lg'></i> Add Product</button>
+        </div>
+      </div>
+      
+      <!-- Visual Category Reordering Wrap -->
+      <div id="categoryContainer" class="space-y-10">
+        <!-- Categories will be rendered here dynamically -->
+        <div class="py-20 text-center text-slate-400 italic">
+          <i class='bx bx-loader-alt bx-spin text-4xl mb-3'></i>
+          <p>Initialising visual catalogue...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="dash-reports" class="tab-content max-w-7xl mx-auto pb-10">
+      <h2 class="text-2xl font-bold text-slate-900 mb-5">Reports & Analytics</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5"><h4 class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3">Enquiries by Type</h4><div id="chartTypeBreakdown" class="space-y-2"></div></div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5"><h4 class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3">Status Breakdown</h4><div id="chartStatusBreakdown" class="space-y-2"></div></div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5"><h4 class="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3">Top Products Requested</h4><div id="chartTopProducts" class="space-y-2"></div></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex justify-between items-center mb-4"><h4 class="font-bold text-slate-800">Enquiries by City</h4><button onclick="generateReport()" class="text-sm bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 transition"><i class='bx bxs-file-export'></i> Download Excel</button></div>
+        <div id="chartCityBreakdown" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="dash-settings" class="tab-content max-w-2xl mx-auto pb-10">
+      <h2 class="text-2xl font-bold text-slate-900 mb-5">Settings</h2>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+        <h4 class="font-bold text-slate-800 border-b pb-3">Admin Profile</h4>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Display Name</label><input type="text" id="settingName" value="Admin User" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-blue-500"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Admin Email</label><input type="email" id="settingEmail" placeholder="admin@bhavyaagroexports.com" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-blue-500" readonly></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Notification Email (for alerts)</label><input type="email" id="settingNotifEmail" placeholder="notifications@bhavyaagroexports.com" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-blue-500"></div>
+        <button data-action="save-settings" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition">Save Settings</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ════════════════════ MODALS ════════════════════ -->
+
+<!-- ENQUIRY DETAIL MODAL (slide-in right) -->
+<div id="enquiryModal" class="modal-overlay fixed inset-0 bg-slate-900/40 z-[3000] flex justify-end backdrop-blur-sm overflow-hidden">
+  <div class="modal-panel bg-white w-full max-w-md h-full shadow-2xl flex flex-col">
+    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-start bg-slate-50">
+      <div>
+        <div class="flex items-center gap-2 mb-1"><span id="mod-type-badge" class="type-badge type-quote"><i class='bx bxs-quote-left'></i> QUOTE</span><span id="mod-status-badge" class="status-badge status-pending">PENDING</span></div>
+        <h3 class="text-xl font-bold text-slate-900 mt-1">Enquiry Details</h3>
+        <p class="text-xs text-slate-500" id="mod-date">Received: —</p>
+      </div>
+      <button onclick="closeModal('enquiryModal')" class="text-slate-400 hover:text-red-500 bg-slate-200 hover:bg-red-50 rounded-full w-8 h-8 flex items-center justify-center transition"><i class='bx bx-x text-xl'></i></button>
+    </div>
+    <div class="p-6 overflow-y-auto flex-1 space-y-5">
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
+        <div class="w-11 h-11 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-lg font-bold" id="mod-avatar">A</div>
+        <div><p class="font-bold text-slate-900" id="mod-name">—</p><p class="text-xs text-slate-500 flex items-center gap-1"><i class='bx bx-map'></i><span id="mod-city">—</span></p></div>
+        <div class="ml-auto text-right">
+          <a id="mod-email" href="#" class="text-xs text-blue-600 hover:underline block">—</a>
+          <p class="text-xs text-slate-500" id="mod-phone">—</p>
+        </div>
+      </div>
+      <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
+        <p class="text-[10px] font-bold text-yellow-800 uppercase tracking-widest mb-1" id="mod-subject-label">Product / Subject</p>
+        <p class="text-base font-semibold text-slate-900" id="mod-product">—</p>
+        <div class="mt-3 pt-3 border-t border-yellow-200/60">
+          <p class="text-[10px] font-bold text-yellow-800 uppercase tracking-widest mb-1">Message</p>
+          <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap" id="mod-message">—</p>
+        </div>
+      </div>
+      <!-- Notes Section -->
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Internal Notes</p>
+        <textarea id="mod-notes" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-400 resize-none" placeholder="Add a private note about this lead..."></textarea>
+        <button data-action="save-note" class="mt-2 text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold text-slate-700 transition">Save Note</button>
+      </div>
+    </div>
+    <div class="p-5 border-t border-slate-200 bg-slate-50 flex flex-wrap gap-2">
+      <button id="btnMarkNew" onclick="window.markAs('new')" class="action-btn" style="background:white; color:var(--slate-600); border:1px solid var(--slate-200); display:none;"><i class='bx bx-undo'></i> Mark as New</button>
+      <button id="btnContactedMod" data-action="mark-contacted" class="action-btn btn-contact"><i class='bx bx-phone-call'></i> Mark Contacted</button>
+      <button id="btnReply" data-action="reply-modal" class="action-btn btn-reply"><i class='bx bx-mail-send'></i> Reply</button>
+      <button id="btnResolve" data-action="mark-resolved" class="action-btn btn-resolve ml-auto"><i class='bx bx-check'></i> Resolve</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND QUOTE MODAL (center) -->
+<div id="quoteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4 sm:p-6">
+  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-auto">
+    <div class="px-6 py-5 border-b flex justify-between items-center bg-slate-50">
+      <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class='bx bxs-file-pdf text-pink-500'></i> Send Quotation</h3>
+      <button onclick="closeModal('quoteModal')" class="text-slate-400 hover:text-red-500"><i class='bx bx-x text-2xl'></i></button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Customer Email</label><input type="email" id="qEmail" placeholder="customer@email.com" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pink-400"></div>
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product</label>
+        <select id="qProduct" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pink-400 bg-white">
+          <option value="" disabled selected>Select a product...</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Quantity (MT)</label><input type="number" id="qQty" placeholder="e.g. 5" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pink-400"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Price / MT (₹)</label><input type="number" id="qPrice" placeholder="e.g. 85000" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pink-400"></div>
+      </div>
+      <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Additional Notes</label><textarea id="qNotes" rows="2" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pink-400 resize-none" placeholder="Delivery terms, validity, etc."></textarea></div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t flex gap-3 justify-end">
+      <button data-action="modal-close" data-modal="quoteModal" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>
+      <button data-action="send-quote" class="px-5 py-2 bg-pink-600 text-white text-sm font-semibold rounded-lg hover:bg-pink-700 transition flex items-center gap-2"><i class='bx bx-send'></i> Send Quote</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4">
+  <div class="center-modal-panel bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center my-auto">
+    <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class='bx bx-trash'></i></div>
+    <h3 class="font-bold text-slate-900 text-lg mb-1">Confirm Deletion</h3>
+    <p class="text-sm text-slate-500 mb-5">This action cannot be undone. The record will be permanently removed.</p>
+    <div class="flex gap-3 justify-center">
+      <button onclick="closeModal('deleteModal')" class="px-5 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">Cancel</button>
+      <button id="btnConfirmDelete" class="px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="productModal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[4000] flex items-start justify-center backdrop-blur-sm p-4 sm:p-6">
+  <div class="center-modal-panel bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-auto">
+    <div class="px-6 py-5 border-b flex justify-between items-center bg-slate-50">
+      <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class='bx bx-box text-emerald-500'></i> <span id="productModalTitle">Add Product</span></h3>
+      <button onclick="closeModal('productModal')" class="text-slate-400 hover:text-red-500"><i class='bx bx-x text-2xl'></i></button>
+    </div>
+    <div class="p-6 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)] min-h-[300px]">
+      <input type="hidden" id="prodEditId">
+      <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Name</label><input type="text" id="prodName" placeholder="e.g. Cold Pressed Safflower Oil" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+          <select id="prodCategorySelect" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 bg-white">
+            <option value="" disabled selected>Select category...</option>
+            <option value="NEW_CAT">+ Add New Category...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Price</label>
+          <input type="text" id="prodPrice" placeholder="On Request or ₹85,000 / MT" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400">
+        </div>
+      </div>
+
+      <!-- New Category Hidden Fields -->
+      <div id="newCategoryWrap" style="display:none;" class="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-3">
+        <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">New Category Details</p>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Display Label</label>
+            <input type="text" id="prodCatLabel" placeholder="e.g. Premium Grains" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category Key (ID)</label>
+            <input type="text" id="prodCategory" placeholder="e.g. grains" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cat. Order</label>
+            <input type="number" id="prodCatOrder" placeholder="1" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400">
+          </div>
+        </div>
+      </div>
+      <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label><textarea id="prodDesc" rows="2" placeholder="Short product description shown on the website..." class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 resize-none"></textarea></div>
+      
+      <!-- Image Upload Section -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Photo</label>
+        <div class="flex items-center gap-4">
+          <div id="modalImgPreviewWrap" class="relative w-24 h-24 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
+            <img id="modalImgPreview" src="" alt="" class="w-full h-full object-cover hidden">
+            <div id="modalImgPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+              <i class='bx bx-camera text-2xl'></i>
+              <span class="text-[8px] font-bold uppercase tracking-tighter mt-1">No Photo</span>
+            </div>
+            <!-- Upload Overlay -->
+            <div id="modalImgLoading" class="absolute inset-0 bg-slate-900/60 flex items-center justify-center hidden">
+              <i class='bx bx-loader-alt bx-spin text-white text-xl'></i>
+            </div>
+          </div>
+          <div class="flex-1 space-y-2">
+            <input type="file" id="prodImgFile" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="window.handleModalImageChange(event)">
+            <button type="button" onclick="document.getElementById('prodImgFile').click()" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 transition flex items-center gap-2"><i class='bx bx-upload'></i> Select Image</button>
+            <p class="text-[10px] text-slate-400">JPG, PNG or WebP. Max 5MB.</p>
+          </div>
+        </div>
+        <input type="hidden" id="prodImage">
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between">
+            <span>Product Tags</span>
+            <span class="text-[10px] lowercase font-normal italic text-slate-400">Separate with commas</span>
+          </label>
+          <input type="text" id="prodTag" placeholder="e.g. Organic, Export Quality, New" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 mb-2" oninput="window.updateModalTagPreview(this.value)">
+          <div id="modalTagPreview" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sort Order</label><input type="number" id="prodOrder" placeholder="1" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400"></div>
+          <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status</label><select id="prodStatus" class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-emerald-400 bg-white"><option value="available">Available</option><option value="limited">Limited Stock</option><option value="unavailable">Unavailable</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t flex gap-3 justify-end">
+      <button data-action="modal-close" data-modal="productModal" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>
+      <button data-action="save-product" class="px-5 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script type="module" src="../js/admin.js"></script>
+<script src="js/data.js"></script>
+<script>
+  // Date display
+  document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // ── MODAL HELPERS ──
+  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+  window.openModal  = function(id) { document.getElementById(id).classList.add('open'); };
+
+  // Close on backdrop click
+  document.querySelectorAll('.modal-overlay').forEach(mo => {
+    mo.addEventListener('click', e => { if(e.target === mo) mo.classList.remove('open'); });
+  });
+
+  // ── TOAST ──
+  let toastTimer;
+  window.showToast = function(msg, type='success') {
+    const t = document.getElementById('toast');
+    const icons = { success:'bx-check-circle', error:'bxs-error-circle', info:'bx-info-circle' };
+    const colors = { success:'toast-success', error:'toast-error', info:'toast-info' };
+    t.className = `toast ${colors[type]}`;
+    document.getElementById('toastMsg').textContent = msg;
+    document.getElementById('toastIcon').className = `bx ${icons[type]} text-xl`;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  };
+
+  // ── SIDEBAR NAVIGATION ──
+  window.switchNav = function(targetId) {
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const link = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+    if(link) link.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    const target = document.getElementById(targetId);
+    if(target) { target.classList.add('active'); window.scrollTo && document.getElementById('mainViews').scrollTo(0,0); }
+    // Lazy compute reports when opened
+    if(targetId === 'dash-reports' && window.renderReports) window.renderReports();
+    if(targetId === 'dash-leads' && window.renderLeads) window.renderLeads();
+  };
+  document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+    link.addEventListener('click', e => { e.preventDefault(); switchNav(link.dataset.target); });
+  });
+
+  // ── GLOBAL SEARCH ──
+  document.getElementById('globalSearch').addEventListener('input', function() {
+    const val = this.value.trim();
+    if(val.length > 0) { switchNav('dash-enquiries'); if(window.filterSearch) { window.filterSearch.value = val; if(window.filterAndRender) window.filterAndRender(); } }
+  });
+
+  // ── REPORT GENERATION ──
+  window.generateReport = function() {
+    if(window.enquiriesData && window.enquiriesData.length) {
+      exportTableExcel('fullEnquiriesTableWrap','Bhavya-Agro-Exports-report');
+    } else { showToast('No data to export yet', 'info'); }
+  };
+
+  window.exportTableExcel = function(tableId, name) {
+    const data = [];
+    data.push(['Date','Type','Customer','Email','Phone','City','Product/Subject','Status']);
+    (window.enquiriesData || []).forEach(d => {
+      data.push([ 
+        d.timestamp ? new Date(d.timestamp.seconds*1000).toLocaleDateString() : '', 
+        d.collection === 'quotations' ? 'Quotation' : 'Message', 
+        d.name||'', 
+        d.email||'', 
+        d.phone||'', 
+        d.city||'', 
+        d.productInterest || d.product || d.enquiryType || '', 
+        (d.status||'pending').toUpperCase() 
+      ]);
+    });
+    
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Enquiries");
+    XLSX.writeFile(wb, `${name}-${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('Excel report downloaded!', 'success');
+  };
+
+  // ── SETTINGS ──
+  window.saveSettings = function() {
+    localStorage.setItem('adminName', document.getElementById('settingName').value);
+    localStorage.setItem('adminNotifEmail', document.getElementById('settingNotifEmail').value);
+    showToast('Settings saved!', 'success');
+  };
+  window.signOutAdmin = function() { if(window.firebaseSignOut) window.firebaseSignOut(); };
+
+  // ── OPEN MODALS ──
+  window.openMakeQuoteModal = function(item) {
+    if(item) { document.getElementById('qEmail').value = item.email||''; document.getElementById('qProduct').value = item.product||''; }
+    openModal('quoteModal');
+  };
+  window.openAddProductModal = function() {
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    ['prodEditId','prodName','prodCategory','prodPrice'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('prodStatus').value = 'available';
+    openModal('productModal');
+  };
+</script>
+</body>
+</html>
