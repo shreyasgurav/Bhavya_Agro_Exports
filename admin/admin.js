@@ -274,28 +274,35 @@ function loadCategories() {
             
             let html = '<div class="categories-grid">';
             
-            // Add categories from Firestore
+            // Add categories from Firestore (editable)
             categories.forEach(category => {
                 html += `
                     <div class="category-card">
-                        <h3>${category.name}</h3>
+                        <h3>${category.label || category.name}</h3>
                         <p>${category.description || 'No description'}</p>
+                        <div class="category-meta">
+                            <small><strong>ID:</strong> ${category.name}</small><br>
+                            <small><strong>Order:</strong> ${category.order || 99}</small>
+                        </div>
                         <div class="category-actions">
+                            <button class="action-btn btn-edit" onclick="editCategory('${category.id}', '${category.name}', '${category.label || ''}', '${category.description || ''}', ${category.order || 99})">✏️ Edit</button>
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
                         </div>
                     </div>
                 `;
             });
             
-            // Add categories derived from products
-            uniqueCategories.forEach(category => {
-                if (!categories.some(c => c.name === category.name)) {
+            // Add categories derived from products (read-only)
+            uniqueCategories.forEach(categoryName => {
+                if (!categories.some(c => c.name === categoryName)) {
+                    const productCount = products.filter(p => p.category === categoryName).length;
                     html += `
-                        <div class="category-card">
-                            <h3>${category.name}</h3>
-                            <p><em>Products in this category: ${products.filter(p => p.category === category.name).length}</em></p>
+                        <div class="category-card readonly">
+                            <h3>${categoryName}</h3>
+                            <p><em>Derived from products (${productCount} items)</em></p>
                             <div class="category-actions">
-                                <button class="action-btn" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
+                                <button class="action-btn" disabled>📊 ${productCount} Products</button>
+                                <button class="action-btn btn-convert" onclick="convertToCategory('${categoryName}')">🔄 Convert to Editable</button>
                             </div>
                         </div>
                     `;
@@ -571,6 +578,48 @@ window.showToast = function(message, type = 'success') {
     }, 3000);
 };
 
+// Edit category functionality
+window.editCategory = function(id, name, label, description, order) {
+    console.log('🔧 Editing category:', id);
+    
+    // Pre-fill modal with category data
+    document.getElementById('category-name').value = name || '';
+    document.getElementById('category-label').value = label || '';
+    document.getElementById('category-description').value = description || '';
+    document.getElementById('category-order').value = order || 1;
+    
+    // Change modal to edit mode
+    document.querySelector('#add-category-modal h3').textContent = 'Edit Category';
+    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Save Changes';
+    
+    // Store editing state
+    window.editingCategoryId = id;
+    
+    // Open modal
+    openAddCategoryModal();
+};
+
+// Convert derived category to editable
+window.convertToCategory = function(categoryName) {
+    console.log('🔄 Converting category to editable:', categoryName);
+    
+    // Pre-fill modal with category name
+    document.getElementById('category-name').value = categoryName;
+    document.getElementById('category-label').value = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+    document.getElementById('category-description').value = `Products in the ${categoryName} category`;
+    document.getElementById('category-order').value = 99;
+    
+    // Change modal to conversion mode
+    document.querySelector('#add-category-modal h3').textContent = 'Convert to Editable Category';
+    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Convert Category';
+    
+    // Clear editing state (this is a new category)
+    window.editingCategoryId = null;
+    
+    // Open modal
+    openAddCategoryModal();
+};
+
 // Modal functions
 window.openAddProductModal = function() {
     console.log('🔓 Opening product modal...');
@@ -600,8 +649,17 @@ window.openAddCategoryModal = function() {
 };
 
 window.closeAddCategoryModal = function() {
+    console.log('🔒 Closing category modal...');
+    
     document.getElementById('add-category-modal').style.display = 'none';
     document.getElementById('add-category-form').reset();
+    
+    // Clear editing state
+    window.editingCategoryId = null;
+    
+    // Reset modal to "Add Category" mode
+    document.querySelector('#add-category-modal h3').textContent = 'Add Category';
+    document.querySelector('#add-category-form button[type="submit"]').textContent = 'Add Category';
 };
 
 // Form submissions
@@ -701,24 +759,76 @@ document.addEventListener('DOMContentLoaded', function() {
         addCategoryForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Get form values
+            const name = document.getElementById('category-name').value.trim();
+            const label = document.getElementById('category-label').value.trim();
+            const description = document.getElementById('category-description').value.trim();
+            const order = parseInt(document.getElementById('category-order').value) || 1;
+            
+            // Validation
+            if (!name) {
+                showToast('Category name is required', 'error');
+                return;
+            }
+            
+            if (!label) {
+                showToast('Category label is required', 'error');
+                return;
+            }
+            
+            // Validate category name format (URL-friendly)
+            if (!/^[a-z0-9-]+$/.test(name)) {
+                showToast('Category name must be lowercase, alphanumeric, and hyphens only', 'error');
+                return;
+            }
+            
+            console.log('💾 Saving category:', { name, label, order });
+            
             const categoryData = {
-                name: document.getElementById('category-name').value,
-                description: document.getElementById('category-description').value,
-                createdAt: new Date()
+                name,
+                label,
+                description: description || '',
+                order,
+                updatedAt: new Date()
             };
             
+            // Only add createdAt for new categories
+            if (!window.editingCategoryId) {
+                categoryData.createdAt = new Date();
+            }
+            
             try {
-                await db.collection("categories").add(categoryData);
-                closeAddCategoryModal();
-                showToast('Category added successfully!', 'success');
-                
-                // Trigger products-service.js cache clear for website sync
-                if (typeof clearProductCache === 'function') {
-                    clearProductCache();
+                if (window.editingCategoryId) {
+                    // Update existing category
+                    console.log('🔄 Updating category:', window.editingCategoryId);
+                    await db.collection("categories").doc(window.editingCategoryId).update(categoryData);
+                    showToast('Category updated successfully!', 'success');
+                    console.log('✅ Category updated in Firebase');
+                } else {
+                    // Add new category
+                    console.log('➕ Adding new category');
+                    const docRef = await db.collection("categories").add(categoryData);
+                    console.log('✅ Category added to Firebase with ID:', docRef.id);
+                    showToast('Category added successfully!', 'success');
                 }
+                
+                // Clear editing state
+                window.editingCategoryId = null;
+                
+                closeAddCategoryModal();
+                
+                // Clear cache for real-time sync
+                clearProductCache();
+                
+                // Refresh categories list
+                loadCategories();
+                
+                // Update product category dropdown
+                updateCategorySelect();
+                
             } catch (error) {
-                console.error('Error adding category:', error);
-                showToast('Failed to add category. Check console.', 'error');
+                console.error('❌ Error saving category:', error);
+                showToast('Failed to save category. Check console for details.', 'error');
             }
         });
     }

@@ -147,12 +147,22 @@
             </div>
             <form id="add-category-form">
                 <div class="form-group">
-                    <label>Category Name</label>
-                    <input type="text" id="category-name" required>
+                    <label>Category Name (URL-friendly)</label>
+                    <input type="text" id="category-name" required placeholder="e.g., oils, grains, cakes">
+                    <small>Use lowercase, no spaces, URL-friendly format</small>
+                </div>
+                <div class="form-group">
+                    <label>Display Label</label>
+                    <input type="text" id="category-label" required placeholder="e.g., Premium Oils, Grains & Sugar">
                 </div>
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea id="category-description" rows="4"></textarea>
+                    <textarea id="category-description" rows="4" placeholder="Describe this category..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Display Order</label>
+                    <input type="number" id="category-order" min="1" value="1" required>
+                    <small>Lower numbers appear first</small>
                 </div>
                 <div class="form-actions">
                     <button type="button" onclick="closeAddCategoryModal()">Cancel</button>
