@@ -52,10 +52,39 @@ function setupLogin() {
     const loginScreen = document.getElementById('login-screen');
     const adminDashboard = document.getElementById('admin-dashboard');
 
-    if (!loginBtn || !usernameInput || !passwordInput) {
-        console.error('Login elements not found');
-        alert('Login form elements not found');
-        return;
+    console.log('Login elements found:', {
+        loginBtn: !!loginBtn,
+        usernameInput: !!usernameInput,
+        passwordInput: !!passwordInput,
+        errorMsg: !!errorMsg,
+        loginScreen: !!loginScreen,
+        adminDashboard: !!adminDashboard
+    });
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            console.log('Login button clicked!');
+            console.log('Username value:', usernameInput.value);
+            console.log('Password value:', passwordInput.value);
+            console.log('Expected user:', AUTH.user);
+            console.log('Expected pass:', AUTH.pass);
+            
+            const isCorrect = usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass;
+            console.log('Login correct?', isCorrect);
+            
+            if (isCorrect) {
+                console.log('Login successful - showing dashboard');
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                loginScreen.style.display = 'none';
+                adminDashboard.style.display = 'block';
+                alert('Login successful!');
+            } else {
+                console.log('Login failed - showing error');
+                errorMsg.style.display = 'block';
+            }
+        });
+    } else {
+        console.error('Login button not found!');
     }
 
     // Check if already logged in
@@ -66,26 +95,6 @@ function setupLogin() {
         adminDashboard.style.display = 'block';
         return;
     }
-
-    // Setup login button click
-    loginBtn.addEventListener('click', function() {
-        console.log('Login button clicked');
-        console.log('Username:', usernameInput.value);
-        console.log('Password:', passwordInput.value);
-        
-        if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
-            console.log('Login successful');
-            sessionStorage.setItem('adminLoggedIn', 'true');
-            loginScreen.style.display = 'none';
-            adminDashboard.style.display = 'block';
-            alert('Login successful!');
-        } else {
-            console.log('Login failed');
-            errorMsg.style.display = 'block';
-        }
-    });
-
-    console.log('Login setup complete');
 }
 
 // Logout function
