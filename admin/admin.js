@@ -237,9 +237,59 @@ function loadCategories() {
         html += '</div>';
         container.innerHTML = html;
         
+        // Update the shared categories file for website sync
+        updateCategoriesFile(categories);
+        
         // Update category select in product modal
         updateCategorySelect(categories);
     });
+}
+
+// Update shared categories file for website sync
+async function updateCategoriesFile(categories) {
+    try {
+        // Fetch current categories from products-service.js
+        const response = await fetch('/js/products-service.js');
+        const text = await response.text();
+        
+        // Extract the current products array
+        const productsServiceMatch = text.match(/FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s);
+        if (productsServiceMatch) {
+            const currentProductsText = productsServiceMatch[1];
+            const currentProducts = JSON.parse(currentProductsText);
+            
+            // Get unique categories from current products
+            const uniqueCategories = [...new Set(currentProducts.map(p => p.category).filter(Boolean))];
+            
+            // Add new categories from admin panel
+            const adminCategories = categories.map(c => c.name);
+            const allCategories = [...new Set([...uniqueCategories, ...adminCategories])];
+            
+            // Update the products-service.js file
+            const updatedContent = text.replace(
+                /FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s,
+                `FALLBACK_PRODUCTS = [${allCategories.map(cat => 
+                    `  { id: "${cat.toLowerCase().replace(/\s+/g, '-')}", name: "${cat}", category: "${cat}", categoryLabel: "${cat}" }`
+                ).join(',\n')            }];\n`
+            );
+            
+            // Write back to the file
+            const blob = new Blob([updatedContent], { type: 'application/javascript' });
+            const newResponse = await fetch('/js/products-service.js', {
+                method: 'POST',
+                body: blob,
+                headers: { 'Content-Type': 'application/javascript' }
+            });
+            
+            if (newResponse.ok) {
+                console.log('✅ Categories file updated for website sync');
+            } else {
+                console.error('❌ Failed to update categories file');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error updating categories file:', error);
+    }
 }
 
 // Update category select
