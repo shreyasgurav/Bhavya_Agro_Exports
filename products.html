@@ -445,9 +445,10 @@
 
   <div id="footer-placeholder"></div>
   <script src="js/main.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script type="module">
     import { fetchPublicProducts, FALLBACK_PRODUCTS, sortProducts } from './js/products-service.js';
-    import { db, collection, addDoc, serverTimestamp, onSnapshot } from './js/firebase-config.js';
 
     // ── STATE ──
     let allProducts = [];
