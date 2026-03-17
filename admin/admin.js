@@ -1,6 +1,3 @@
-// Simple Admin Panel - Fresh Start
-console.log('Admin panel loading...');
-
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
@@ -12,29 +9,14 @@ const firebaseConfig = {
     measurementId: "G-GMV0NN4VKR"
 };
 
+// Simple Admin Panel - Fresh Start
+console.log('Admin panel loading...');
+
 // Login credentials
 const AUTH = {
     user: "omkar",
     pass: "bhavya123"
 };
-
-let db, storage;
-
-// Initialize Firebase
-function initializeFirebase() {
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        db = firebase.firestore();
-        storage = firebase.storage();
-        console.log('✅ Firebase initialized successfully');
-        return true;
-    } catch (error) {
-        console.error('❌ Firebase initialization failed:', error);
-        return false;
-    }
-}
 
 // Login functionality
 function setupLogin() {
@@ -59,11 +41,6 @@ function setupLogin() {
         loginScreen.style.display = 'none';
         adminDashboard.style.display = 'block';
         
-        // Initialize Firebase if not already done
-        if (!db || !storage) {
-            initializeFirebase();
-        }
-        
         initializeAdmin();
         return;
     }
@@ -72,33 +49,18 @@ function setupLogin() {
     loginBtn.addEventListener('click', function(e) {
         e.preventDefault();
         console.log('🔥 LOGIN BUTTON CLICKED!');
-        console.log('📝 Username:', usernameInput.value);
-        console.log('🔑 Password:', passwordInput.value);
         
         if (usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass) {
             console.log('✅ Login successful!');
-            console.log('🔥 Hiding login screen and showing dashboard...');
             sessionStorage.setItem('adminLoggedIn', 'true');
             loginScreen.style.display = 'none';
             adminDashboard.style.display = 'block';
-            console.log('✅ Dashboard should now be visible');
-            
-            // Initialize Firebase if not already done
-            if (!db || !storage) {
-                console.log('🔥 Initializing Firebase...');
-                initializeFirebase();
-            }
             
             console.log('🔥 Initializing admin panel...');
             initializeAdmin();
         } else {
             console.log('❌ Login failed - credentials incorrect');
-            console.log('📝 Expected username:', AUTH.user);
-            console.log('📝 Expected password:', AUTH.pass);
-            console.log('📝 Actual username:', usernameInput.value);
-            console.log('📝 Actual password:', passwordInput.value);
             errorMsg.style.display = 'block';
-            console.log('✅ Error message should now be visible');
         }
     });
 }
@@ -107,25 +69,9 @@ function setupLogin() {
 function initializeAdmin() {
     console.log('🚀 Initializing admin panel...');
     
-    // Make sure Firebase is initialized before loading data
-    if (!db || !storage) {
-        console.log('🔥 Firebase not initialized, initializing now...');
-        if (!initializeFirebase()) {
-            console.error('❌ Firebase initialization failed');
-            return;
-        }
-    }
-    
     loadInbox();
     loadProducts();
     loadCategories();
-    loadContentSections();
-}
-
-// Load content sections status
-function loadContentSections() {
-    // This function will show the status of each content section
-    console.log('📝 Loading content sections status...');
 }
 
 // Navigation
@@ -141,8 +87,25 @@ window.showSection = function(section) {
     });
     
     // Show selected section and activate nav button
-    document.getElementById(`${section}-section`).style.display = 'block';
-    event.target.classList.add('active');
+    const target = document.getElementById(`${section}-section`);
+    if (target) {
+        target.style.display = 'block';
+    }
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+};
+
+// Logout
+window.logout = function() {
+    console.log('🚪 Logging out...');
+    sessionStorage.removeItem('adminLoggedIn');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-dashboard').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    const errorMsg = document.getElementById('error-msg');
+    if (errorMsg) errorMsg.style.display = 'none';
 };
 
 // Logout
@@ -159,9 +122,11 @@ window.logout = function() {
 // Load inbox
 function loadInbox() {
     const container = document.getElementById('inbox-container');
+    if (!container) return;
     container.innerHTML = '<p>Loading inquiries...</p>';
     
-    db.collection("contacts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+    const q = query(collection(db, "contacts"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
         const inquiries = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -178,7 +143,7 @@ function loadInbox() {
         inquiries.forEach(inquiry => {
             const status = (inquiry.status || 'new').toLowerCase();
             const isNew = status === 'new';
-            const date = inquiry.timestamp ? inquiry.timestamp.toDate().toLocaleDateString() : '---';
+            const date = inquiry.timestamp ? (inquiry.timestamp.toDate ? inquiry.timestamp.toDate().toLocaleDateString() : new Date(inquiry.timestamp).toLocaleDateString()) : '---';
             
             html += `
                 <tr>
@@ -207,9 +172,11 @@ function loadInbox() {
 // Load products
 function loadProducts() {
     const container = document.getElementById('products-container');
+    if (!container) return;
     container.innerHTML = '<p>Loading products...</p>';
     
-    db.collection("products").orderBy("name", "asc").onSnapshot((snapshot) => {
+    const q = query(collection(db, "products"), orderBy("name", "asc"));
+    onSnapshot(q, (snapshot) => {
         const products = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -242,7 +209,7 @@ function loadProducts() {
                 <tr>
                     <td>${imageHtml}</td>
                     <td>${product.name}</td>
-                    <td>${product.category || '---'}</td>
+                    <td>${product.categoryLabel || product.category || '---'}</td>
                     <td>${product.description ? product.description.substring(0, 100) + '...' : 'No description'}</td>
                     <td><span class="status-tag ${status === 'available' ? 'tag-new' : 'tag-unavailable'}">${status.toUpperCase()}</span></td>
                     <td>
@@ -261,115 +228,68 @@ function loadProducts() {
 // Load categories
 function loadCategories() {
     const container = document.getElementById('categories-container');
+    if (!container) return;
     container.innerHTML = '<p>Loading categories...</p>';
     
-    db.collection("categories").orderBy("name", "asc").onSnapshot((snapshot) => {
+    const q = query(collection(db, "categories"), orderBy("order", "asc"));
+    onSnapshot(q, async (snapshot) => {
         const categories = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
         
         if (categories.length === 0) {
-            container.innerHTML = '<p>No categories found.</p>';
-            return;
+            container.innerHTML = '<p>No categories found. Adding products will help derive them.</p>';
         }
         
-        // Derive categories from products collection
-        db.collection("products").get().then(productsSnapshot => {
-            const products = productsSnapshot.docs.map(doc => doc.data());
-            const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
-            
-            let html = '<div class="categories-grid">';
-            
-            // Add categories from Firestore (editable)
-            categories.forEach(category => {
+        // Fetch products to find derived categories not yet in the 'categories' collection
+        const productsSnapshot = await getDocs(collection(db, "products"));
+        const products = productsSnapshot.docs.map(doc => doc.data());
+        const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+        
+        let html = '<div class="categories-grid">';
+        
+        // Add categories from Firestore (editable)
+        categories.forEach(category => {
+            html += `
+                <div class="category-card">
+                    <h3>${category.label || category.name}</h3>
+                    <p>${category.description || 'No description'}</p>
+                    <div class="category-meta">
+                        <small><strong>ID:</strong> ${category.name}</small><br>
+                        <small><strong>Order:</strong> ${category.order || 99}</small>
+                    </div>
+                    <div class="category-actions">
+                        <button class="action-btn btn-edit" onclick="editCategory('${category.id}', '${category.name}', '${category.label || ''}', '${category.description || ''}', ${category.order || 99})">✏️ Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Add categories derived from products (read-only)
+        uniqueCategories.forEach(categoryName => {
+            if (!categories.some(c => c.name === categoryName)) {
+                const productCount = products.filter(p => p.category === categoryName).length;
                 html += `
-                    <div class="category-card">
-                        <h3>${category.label || category.name}</h3>
-                        <p>${category.description || 'No description'}</p>
-                        <div class="category-meta">
-                            <small><strong>ID:</strong> ${category.name}</small><br>
-                            <small><strong>Order:</strong> ${category.order || 99}</small>
-                        </div>
+                    <div class="category-card readonly">
+                        <h3>${categoryName}</h3>
+                        <p><em>Derived from products (${productCount} items)</em></p>
                         <div class="category-actions">
-                            <button class="action-btn btn-edit" onclick="editCategory('${category.id}', '${category.name}', '${category.label || ''}', '${category.description || ''}', ${category.order || 99})">✏️ Edit</button>
-                            <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                            <button class="action-btn" disabled>📊 ${productCount} Products</button>
+                            <button class="action-btn btn-convert" onclick="convertToCategory('${categoryName}')">🔄 Convert to Editable</button>
                         </div>
                     </div>
                 `;
-            });
-            
-            // Add categories derived from products (read-only)
-            uniqueCategories.forEach(categoryName => {
-                if (!categories.some(c => c.name === categoryName)) {
-                    const productCount = products.filter(p => p.category === categoryName).length;
-                    html += `
-                        <div class="category-card readonly">
-                            <h3>${categoryName}</h3>
-                            <p><em>Derived from products (${productCount} items)</em></p>
-                            <div class="category-actions">
-                                <button class="action-btn" disabled>📊 ${productCount} Products</button>
-                                <button class="action-btn btn-convert" onclick="convertToCategory('${categoryName}')">🔄 Convert to Editable</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
+            }
         });
+        
+        html += '</div>';
+        container.innerHTML = html;
         
         // Update category select in product modal
         updateCategorySelect();
     });
-}
-
-// Update shared categories file for website sync
-async function updateCategoriesFile(categories) {
-    try {
-        // Fetch current categories from products-service.js
-        const response = await fetch('/js/products-service.js');
-        const text = await response.text();
-        
-        // Extract the current products array
-        const productsServiceMatch = text.match(/FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s);
-        if (productsServiceMatch) {
-            const currentProductsText = productsServiceMatch[1];
-            const currentProducts = JSON.parse(currentProductsText);
-            
-            // Get unique categories from current products
-            const uniqueCategories = [...new Set(currentProducts.map(p => p.category).filter(Boolean))];
-            
-            // Add new categories from admin panel
-            const adminCategories = categories.map(c => c.name);
-            const allCategories = [...new Set([...uniqueCategories, ...adminCategories])];
-            
-            // Update the products-service.js file
-            const updatedContent = text.replace(
-                /FALLBACK_PRODUCTS\s*=\[([\s\S]*?)\];/s,
-                `FALLBACK_PRODUCTS = [${allCategories.map(cat => 
-                    `  { id: "${cat.toLowerCase().replace(/\s+/g, '-')}", name: "${cat}", category: "${cat}", categoryLabel: "${cat}" }`
-                ).join(',\n')            }];\n`
-            );
-            
-            // Write back to the file
-            const blob = new Blob([updatedContent], { type: 'application/javascript' });
-            const newResponse = await fetch('/js/products-service.js', {
-                method: 'POST',
-                body: blob,
-                headers: { 'Content-Type': 'application/javascript' }
-            });
-            
-            if (newResponse.ok) {
-                console.log('✅ Categories file updated for website sync');
-            } else {
-                console.error('❌ Failed to update categories file');
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error updating categories file:', error);
-    }
 }
 
 // Upload mode toggle
@@ -627,158 +547,6 @@ window.convertToCategory = function(categoryName) {
     openAddCategoryModal();
 };
 
-// Content editing functionality
-window.editContent = function(section) {
-    console.log('🔧 Editing content section:', section);
-    
-    // Load current content
-    if (typeof getContentSection === 'function') {
-        getContentSection(section).then(content => {
-            if (content) {
-                openContentModal(section, content);
-            } else {
-                showToast('Failed to load content section', 'error');
-            }
-        });
-    } else {
-        showToast('Content manager not loaded', 'error');
-    }
-};
-
-// Open content modal
-window.openContentModal = function(section, content) {
-    const modal = document.getElementById('content-modal');
-    const title = document.getElementById('content-modal-title');
-    const formFields = document.getElementById('content-form-fields');
-    
-    // Set modal title
-    const sectionTitles = {
-        hero: 'Hero Section',
-        about: 'About Us',
-        whyChooseUs: 'Why Choose Us',
-        certificates: 'Certifications',
-        contact: 'Contact Information',
-        seo: 'SEO Settings'
-    };
-    
-    title.textContent = `Edit ${sectionTitles[section] || section}`;
-    
-    // Generate form fields based on content structure
-    let fieldsHTML = '';
-    
-    if (section === 'hero') {
-        fieldsHTML = `
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="content-title" value="${content.title || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Subtitle</label>
-                <input type="text" id="content-subtitle" value="${content.subtitle || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="content-description" rows="4" required>${content.description || ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label>CTA Button Text</label>
-                <input type="text" id="content-cta" value="${content.ctaButton || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Background Image</label>
-                <input type="text" id="content-background" value="${content.backgroundImage || ''}" placeholder="images/hero_produce.png">
-            </div>
-        `;
-    } else if (section === 'contact') {
-        fieldsHTML = `
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="content-email" value="${content.email || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" id="content-phone" value="${content.phone || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Address</label>
-                <textarea id="content-address" rows="3" required>${content.address || ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label>Working Hours</label>
-                <input type="text" id="content-hours" value="${content.workingHours || ''}" required>
-            </div>
-        `;
-    } else if (section === 'seo') {
-        fieldsHTML = `
-            <div class="form-group">
-                <label>Meta Title</label>
-                <input type="text" id="content-meta-title" value="${content.metaTitle || ''}" required>
-            </div>
-            <div class="form-group">
-                <label>Meta Description</label>
-                <textarea id="content-meta-description" rows="3" required>${content.metaDescription || ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label>Keywords</label>
-                <input type="text" id="content-keywords" value="${content.keywords || ''}" placeholder="comma, separated, keywords">
-            </div>
-            <div class="form-group">
-                <label>OG Image</label>
-                <input type="text" id="content-og-image" value="${content.ogImage || ''}" placeholder="images/og-cover.jpg">
-            </div>
-        `;
-    } else {
-        // Generic content editor
-        fieldsHTML = `
-            <div class="form-group">
-                <label>Content (JSON)</label>
-                <textarea id="content-json" rows="10" required>${JSON.stringify(content, null, 2)}</textarea>
-                <small>Edit the JSON content above</small>
-            </div>
-        `;
-    }
-    
-    formFields.innerHTML = fieldsHTML;
-    
-    // Store current section
-    window.editingContentSection = section;
-    
-    // Show modal
-    modal.style.display = 'flex';
-};
-
-// Close content modal
-window.closeContentModal = function() {
-    const modal = document.getElementById('content-modal');
-    modal.style.display = 'none';
-    document.getElementById('content-form').reset();
-    window.editingContentSection = null;
-};
-
-// Settings functions
-window.clearAllCaches = function() {
-    if (confirm('This will clear all caches across the website. Continue?')) {
-        clearProductCache();
-        clearWebsiteCache();
-        showToast('All caches cleared successfully', 'success');
-    }
-};
-
-window.backupData = function() {
-    console.log('💾 Creating data backup...');
-    showToast('Backup functionality coming soon', 'info');
-};
-
-window.viewAnalytics = function() {
-    console.log('📊 Opening analytics...');
-    showToast('Analytics dashboard coming soon', 'info');
-};
-
-window.changePassword = function() {
-    console.log('🔑 Opening password change...');
-    showToast('Password change functionality coming soon', 'info');
-};
-
 // Modal functions
 window.openAddProductModal = function() {
     console.log('🔓 Opening product modal...');
@@ -988,81 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('❌ Error saving category:', error);
                 showToast('Failed to save category. Check console for details.', 'error');
-            }
-        });
-    }
-    
-    // Content form
-    const contentForm = document.getElementById('content-form');
-    if (contentForm) {
-        contentForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const section = window.editingContentSection;
-            if (!section) {
-                showToast('No content section selected', 'error');
-                return;
-            }
-            
-            let contentData = {};
-            
-            // Extract data based on section type
-            if (section === 'hero') {
-                contentData = {
-                    title: document.getElementById('content-title').value.trim(),
-                    subtitle: document.getElementById('content-subtitle').value.trim(),
-                    description: document.getElementById('content-description').value.trim(),
-                    ctaButton: document.getElementById('content-cta').value.trim(),
-                    backgroundImage: document.getElementById('content-background').value.trim()
-                };
-            } else if (section === 'contact') {
-                contentData = {
-                    email: document.getElementById('content-email').value.trim(),
-                    phone: document.getElementById('content-phone').value.trim(),
-                    address: document.getElementById('content-address').value.trim(),
-                    workingHours: document.getElementById('content-hours').value.trim()
-                };
-            } else if (section === 'seo') {
-                contentData = {
-                    metaTitle: document.getElementById('content-meta-title').value.trim(),
-                    metaDescription: document.getElementById('content-meta-description').value.trim(),
-                    keywords: document.getElementById('content-keywords').value.trim(),
-                    ogImage: document.getElementById('content-og-image').value.trim()
-                };
-            } else {
-                // Generic JSON content
-                try {
-                    contentData = JSON.parse(document.getElementById('content-json').value);
-                } catch (error) {
-                    showToast('Invalid JSON format', 'error');
-                    return;
-                }
-            }
-            
-            // Validate required fields
-            if (!contentData || Object.keys(contentData).length === 0) {
-                showToast('Please fill in all required fields', 'error');
-                return;
-            }
-            
-            console.log('💾 Saving content:', section, contentData);
-            
-            try {
-                if (typeof updateContentSection === 'function') {
-                    const success = await updateContentSection(section, contentData);
-                    if (success) {
-                        showToast('Content updated successfully!', 'success');
-                        closeContentModal();
-                        clearWebsiteCache();
-                    } else {
-                        showToast('Failed to update content', 'error');
-                    }
-                } else {
-                    showToast('Content manager not available', 'error');
-                }
-            } catch (error) {
-                console.error('❌ Error saving content:', error);
-                showToast('Failed to save content. Check console for details.', 'error');
             }
         });
     }
