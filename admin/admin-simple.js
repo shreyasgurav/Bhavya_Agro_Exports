@@ -31,7 +31,11 @@ window.db = db;
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded');
-    setupLogin();
+    
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        setupLogin();
+    }, 100);
 });
 
 function setupLogin() {
@@ -60,6 +64,8 @@ function setupLogin() {
             console.log('Password value:', passwordInput.value);
             console.log('Expected user:', AUTH.user);
             console.log('Expected pass:', AUTH.pass);
+            console.log('Username input exists:', !!usernameInput);
+            console.log('Password input exists:', !!passwordInput);
             
             const isCorrect = usernameInput.value === AUTH.user && passwordInput.value === AUTH.pass;
             console.log('Login correct?', isCorrect);
@@ -72,7 +78,9 @@ function setupLogin() {
                 alert('Login successful!');
             } else {
                 console.log('Login failed - showing error');
-                errorMsg.style.display = 'block';
+                if (errorMsg) {
+                    errorMsg.style.display = 'block';
+                }
             }
         });
     } else {
