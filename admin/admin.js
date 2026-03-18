@@ -332,29 +332,32 @@ function initializeDragAndDrop() {
             
             console.log('🔄 Dropped:', draggedData.categoryName, 'onto:', targetData.categoryName);
             
-            // Swap the visual positions
-            const draggedHTML = draggedElement.innerHTML;
-            const targetHTML = this.innerHTML;
+            // Get all category cards
+            const allCards = Array.from(document.querySelectorAll('.category-card'));
+            const draggedIndex = allCards.indexOf(draggedElement);
+            const targetIndex = allCards.indexOf(this);
             
-            draggedElement.innerHTML = targetHTML;
-            this.innerHTML = draggedHTML;
+            // Reorder the array
+            if (draggedIndex < targetIndex) {
+                // Moving down
+                this.parentNode.insertBefore(draggedElement, this.nextSibling);
+            } else {
+                // Moving up
+                this.parentNode.insertBefore(draggedElement, this);
+            }
             
-            // Swap the data attributes
-            const draggedCategoryId = draggedElement.dataset.categoryId;
-            const draggedCategoryName = draggedElement.dataset.categoryName;
-            const draggedOrder = draggedElement.dataset.order;
-            
-            draggedElement.dataset.categoryId = this.dataset.categoryId;
-            draggedElement.dataset.categoryName = this.dataset.categoryName;
-            draggedElement.dataset.order = this.dataset.order;
-            
-            this.dataset.categoryId = draggedCategoryId;
-            this.dataset.categoryName = draggedCategoryName;
-            this.dataset.order = draggedOrder;
-            
-            // Update the order in Firebase
-            updateCategoryOrder(draggedData.categoryId, targetData.order);
-            updateCategoryOrder(targetData.categoryId, draggedData.order);
+            // Update order values for all affected categories
+            const reorderedCards = Array.from(document.querySelectorAll('.category-card'));
+            reorderedCards.forEach((card, index) => {
+                const categoryId = card.dataset.categoryId;
+                const categoryName = card.dataset.categoryName;
+                card.dataset.order = index;
+                
+                // Update Firebase for Firestore categories only
+                if (categoryId && !categoryId.startsWith('derived-')) {
+                    updateCategoryOrder(categoryId, index);
+                }
+            });
             
             // Show success message
             showToast('Category order updated successfully!', 'success');
@@ -482,9 +485,11 @@ function loadCategories() {
                 html += `
                     <div class="category-card" draggable="true" data-category-id="${category.id || 'derived-' + category.name}" data-category-name="${category.name}" data-order="${category.order}">
                         <div class="drag-handle">⋮⋮</div>
-                        <h3>${displayName}</h3>
-                        <p>${category.description || 'No description'}</p>
-                        <div class="category-actions">
+                        <div class="category-card-content">
+                            <h3>${displayName}</h3>
+                            <p>${category.description || 'No description'}</p>
+                        </div>
+                        <div class="category-card-actions">
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')" ${!category.isFirestore ? 'disabled' : ''}>🗑 Delete</button>
                             <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
                         </div>
