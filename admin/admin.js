@@ -259,19 +259,15 @@ function loadCategories() {
     const container = document.getElementById('categories-container');
     container.innerHTML = '<p>Loading categories...</p>';
     
-    db.collection("categories").orderBy("name", "asc").onSnapshot((snapshot) => {
-        const categories = snapshot.docs.map(doc => ({
+    // Real-time listener for categories from Firestore
+    db.collection("categories").orderBy("name", "asc").onSnapshot((categoriesSnapshot) => {
+        const categories = categoriesSnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
         
-        if (categories.length === 0) {
-            container.innerHTML = '<p>No categories found.</p>';
-            return;
-        }
-        
-        // Derive categories from products collection
-        db.collection("products").get().then(productsSnapshot => {
+        // Real-time listener for products to derive categories
+        db.collection("products").onSnapshot((productsSnapshot) => {
             const products = productsSnapshot.docs.map(doc => doc.data());
             const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
             
@@ -279,13 +275,14 @@ function loadCategories() {
             
             // Add categories from Firestore
             categories.filter(cat => cat && cat.name).forEach(category => {
+                const productCount = products.filter(p => p.category === category.name).length;
                 html += `
                     <div class="category-card">
                         <h3>${category.name}</h3>
                         <p>${category.description || 'No description'}</p>
                         <div class="category-actions">
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
-                            <button class="action-btn btn-view-products" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
+                            <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
                         </div>
                     </div>
                 `;
@@ -294,13 +291,14 @@ function loadCategories() {
             // Add categories derived from products
             uniqueCategories.filter(cat => cat && cat.trim()).forEach(categoryName => {
                 if (!categories.some(c => c.name === categoryName)) {
+                    const productCount = products.filter(p => p.category === categoryName).length;
                     html += `
                         <div class="category-card">
                             <h3>${categoryName}</h3>
-                            <p><em>Products in this category: ${products.filter(p => p.category === categoryName).length}</em></p>
+                            <p><em>Products in this category: ${productCount}</em></p>
                             <div class="category-actions">
-                                <button class="action-btn btn-delete" disabled>� Delete</button>
-                                <button class="action-btn btn-view-products" disabled>�� View Products (${products.filter(p => p.category === categoryName).length})</button>
+                                <button class="action-btn btn-delete" disabled>🗑 Delete</button>
+                                <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
                             </div>
                         </div>
                     `;
@@ -309,10 +307,10 @@ function loadCategories() {
             
             html += '</div>';
             container.innerHTML = html;
+            
+            // Update category select in product modal
+            updateCategorySelect();
         });
-        
-        // Update category select in product modal
-        updateCategorySelect();
     });
 }
 
