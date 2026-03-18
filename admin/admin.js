@@ -289,8 +289,10 @@ function loadCategories() {
             });
             
             // Add categories derived from products
-            uniqueCategories.filter(cat => cat && cat.trim()).forEach(categoryName => {
-                if (!categories.some(c => c.name === categoryName)) {
+            uniqueCategories
+                .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null')
+                .filter(cat => !categories.some(c => c.name === cat))
+                .forEach(categoryName => {
                     const productCount = products.filter(p => p.category === categoryName).length;
                     html += `
                         <div class="category-card">
@@ -302,8 +304,7 @@ function loadCategories() {
                             </div>
                         </div>
                     `;
-                }
-            });
+                });
             
             html += '</div>';
             container.innerHTML = html;
@@ -619,11 +620,18 @@ function updateCategorySelect() {
         db.collection("categories").get(),
         db.collection("products").get()
     ]).then(([categoriesSnapshot, productsSnapshot]) => {
-        const firestoreCategories = categoriesSnapshot.docs.map(doc => doc.data().name).filter(Boolean);
-        const productCategories = [...new Set(productsSnapshot.docs.map(doc => doc.data().category).filter(Boolean))];
+        const firestoreCategories = categoriesSnapshot.docs
+            .map(doc => doc.data().name)
+            .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null');
+        
+        const productCategories = [...new Set(productsSnapshot.docs
+            .map(doc => doc.data().category)
+            .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null'))];
         
         // Combine and deduplicate all categories
-        const allCategories = [...new Set([...firestoreCategories, ...productCategories])].sort();
+        const allCategories = [...new Set([...firestoreCategories, ...productCategories])]
+            .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null')
+            .sort();
         
         // Add category options
         allCategories.forEach(categoryName => {
