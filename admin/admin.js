@@ -254,141 +254,6 @@ function loadProducts() {
     });
 }
 
-// Initialize drag and drop functionality
-function initializeDragAndDrop() {
-    const cards = document.querySelectorAll('.category-card');
-    const grid = document.querySelector('.categories-grid');
-    
-    let draggedElement = null;
-    let draggedData = null;
-    
-    cards.forEach(card => {
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragend', handleDragEnd);
-        card.addEventListener('dragover', handleDragOver);
-        card.addEventListener('drop', handleDrop);
-        card.addEventListener('dragenter', handleDragEnter);
-        card.addEventListener('dragleave', handleDragLeave);
-    });
-    
-    function handleDragStart(e) {
-        draggedElement = this;
-        draggedData = {
-            categoryId: this.dataset.categoryId,
-            categoryName: this.dataset.categoryName,
-            order: parseInt(this.dataset.order)
-        };
-        
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
-        
-        console.log('🎯 Started dragging:', draggedData.categoryName);
-    }
-    
-    function handleDragEnd(e) {
-        this.classList.remove('dragging');
-        
-        // Remove all drag-over classes
-        cards.forEach(card => {
-            card.classList.remove('drag-over');
-        });
-        
-        draggedElement = null;
-        draggedData = null;
-    }
-    
-    function handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault();
-        }
-        
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    }
-    
-    function handleDragEnter(e) {
-        if (this !== draggedElement) {
-            this.classList.add('drag-over');
-        }
-    }
-    
-    function handleDragLeave(e) {
-        this.classList.remove('drag-over');
-    }
-    
-    function handleDrop(e) {
-        if (e.stopPropagation) {
-            e.stopPropagation();
-        }
-        
-        if (draggedElement !== this) {
-            // Get the drop target data
-            const targetData = {
-                categoryId: this.dataset.categoryId,
-                categoryName: this.dataset.categoryName,
-                order: parseInt(this.dataset.order)
-            };
-            
-            console.log('🔄 Dropped:', draggedData.categoryName, 'onto:', targetData.categoryName);
-            
-            // Get all category cards
-            const allCards = Array.from(document.querySelectorAll('.category-card'));
-            const draggedIndex = allCards.indexOf(draggedElement);
-            const targetIndex = allCards.indexOf(this);
-            
-            // Reorder the array
-            if (draggedIndex < targetIndex) {
-                // Moving down
-                this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else {
-                // Moving up
-                this.parentNode.insertBefore(draggedElement, this);
-            }
-            
-            // Update order values for all affected categories
-            const reorderedCards = Array.from(document.querySelectorAll('.category-card'));
-            reorderedCards.forEach((card, index) => {
-                const categoryId = card.dataset.categoryId;
-                const categoryName = card.dataset.categoryName;
-                card.dataset.order = index;
-                
-                // Update Firebase for Firestore categories only
-                if (categoryId && !categoryId.startsWith('derived-')) {
-                    updateCategoryOrder(categoryId, index);
-                }
-            });
-            
-            // Show success message
-            showToast('Category order updated successfully!', 'success');
-            
-            // Broadcast the change to other tabs
-            broadcastCategoryOrderChange();
-        }
-        
-        return false;
-    }
-}
-
-// Update category order in Firebase
-async function updateCategoryOrder(categoryId, newOrder) {
-    if (!categoryId || categoryId.startsWith('derived-')) {
-        // Skip derived categories (not in Firestore)
-        return;
-    }
-    
-    try {
-        await db.collection("categories").doc(categoryId).update({
-            order: newOrder,
-            updatedAt: new Date()
-        });
-        console.log(`✅ Updated category ${categoryId} order to ${newOrder}`);
-    } catch (error) {
-        console.error('❌ Error updating category order:', error);
-        showToast('Failed to update category order', 'error');
-    }
-}
-
 // Broadcast category order changes to other tabs
 function broadcastCategoryOrderChange() {
     if (typeof BroadcastChannel !== 'undefined') {
@@ -422,7 +287,7 @@ function getCategoryDisplayName(categoryName) {
     return categoryMapping[categoryName] || categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
 }
 
-// Load categories
+// Load categories with dnd-kit drag-and-drop and expandable products
 function loadCategories() {
     const container = document.getElementById('categories-container');
     container.innerHTML = '<p>Loading categories...</p>';
@@ -476,37 +341,371 @@ function loadCategories() {
                 return a.name.localeCompare(b.name);
             });
             
-            let html = '<div class="categories-grid">';
-            
-            allCategories.forEach((category, index) => {
+            // Render categories with dnd-kit
+            renderCategoriesWithDND(allCategories, products, container);
+        });
+    });
+}
+
+// Render categories with drag-and-drop and expandable products
+function renderCategoriesWithDND(categories, products, container) {
+    const html = `
+        <div id="categories-container-dnd">
+            ${categories.map((category, index) => {
                 const productCount = products.filter(p => p.category === category.name).length;
                 const displayName = getCategoryDisplayName(category.name);
+                const categoryProducts = products.filter(p => p.category === category.name);
                 
-                html += `
+                return `
                     <div class="category-card" draggable="true" data-category-id="${category.id || 'derived-' + category.name}" data-category-name="${category.name}" data-order="${category.order}">
                         <div class="drag-handle">⋮⋮</div>
                         <div class="category-card-content">
                             <h3>${displayName}</h3>
                             <p>${category.description || 'No description'}</p>
+                            <div class="category-products-list" id="products-${category.name}">
+                                ${renderProductsList(categoryProducts, category.name)}
+                            </div>
                         </div>
                         <div class="category-card-actions">
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')" ${!category.isFirestore ? 'disabled' : ''}>🗑 Delete</button>
-                            <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
+                            <button class="action-btn btn-view-products" onclick="toggleProductsList('${category.name}')">📊 View Products (${productCount})</button>
                         </div>
                     </div>
                 `;
+            }).join('')}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Initialize drag-and-drop after DOM is ready
+    setTimeout(() => initializeCategoryDragAndDrop(), 100);
+}
+
+// Initialize category drag-and-drop
+function initializeCategoryDragAndDrop() {
+    const cards = document.querySelectorAll('.category-card');
+    
+    let draggedElement = null;
+    let draggedData = null;
+    
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleCategoryDragStart);
+        card.addEventListener('dragend', handleCategoryDragEnd);
+        card.addEventListener('dragover', handleCategoryDragOver);
+        card.addEventListener('drop', handleCategoryDrop);
+        card.addEventListener('dragenter', handleCategoryDragEnter);
+        card.addEventListener('dragleave', handleCategoryDragLeave);
+    });
+    
+    function handleCategoryDragStart(e) {
+        draggedElement = this;
+        draggedData = {
+            categoryId: this.dataset.categoryId,
+            categoryName: this.dataset.categoryName,
+            order: parseInt(this.dataset.order)
+        };
+        
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        
+        console.log('🎯 Started dragging category:', draggedData.categoryName);
+    }
+    
+    function handleCategoryDragEnd(e) {
+        this.classList.remove('dragging');
+        
+        // Remove all drag-over classes
+        cards.forEach(card => {
+            card.classList.remove('drag-over');
+        });
+        
+        draggedElement = null;
+        draggedData = null;
+    }
+    
+    function handleCategoryDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleCategoryDragEnter(e) {
+        if (this !== draggedElement) {
+            this.classList.add('drag-over');
+        }
+    }
+    
+    function handleCategoryDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+    
+    async function handleCategoryDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        
+        if (draggedElement !== this) {
+            // Get the drop target data
+            const targetData = {
+                categoryId: this.dataset.categoryId,
+                categoryName: this.dataset.categoryName,
+                order: parseInt(this.dataset.order)
+            };
+            
+            console.log('🔄 Dropped category:', draggedData.categoryName, 'onto:', targetData.categoryName);
+            
+            // Get all category cards
+            const allCards = Array.from(document.querySelectorAll('.category-card'));
+            const draggedIndex = allCards.indexOf(draggedElement);
+            const targetIndex = allCards.indexOf(this);
+            
+            // Reorder the array
+            if (draggedIndex < targetIndex) {
+                // Moving down
+                this.parentNode.insertBefore(draggedElement, this.nextSibling);
+            } else {
+                // Moving up
+                this.parentNode.insertBefore(draggedElement, this);
+            }
+            
+            // Update order values for all affected categories
+            const reorderedCards = Array.from(document.querySelectorAll('.category-card'));
+            const newCategoryOrder = [];
+            
+            reorderedCards.forEach((card, index) => {
+                const categoryId = card.dataset.categoryId;
+                const categoryName = card.dataset.categoryName;
+                card.dataset.order = index;
+                newCategoryOrder.push(categoryName);
+                
+                // Update Firebase for Firestore categories only
+                if (categoryId && !categoryId.startsWith('derived-')) {
+                    updateCategoryOrder(categoryId, index);
+                }
             });
             
-            html += '</div>';
-            container.innerHTML = html;
+            // Show success message
+            showToast('Category order updated successfully!', 'success');
             
-            // Add drag and drop event listeners
-            initializeDragAndDrop();
-            
-            // Update category select in product modal
-            updateCategorySelect();
+            // Broadcast the change to other tabs
+            broadcastCategoryOrderChange();
+        }
+        
+        return false;
+    }
+    
+    // Store event handlers for cleanup
+    window.categoryDragHandlers = {
+        handleCategoryDragStart,
+        handleCategoryDragEnd,
+        handleCategoryDragOver,
+        handleCategoryDrop,
+        handleCategoryDragEnter,
+        handleCategoryDragLeave
+    };
+}
+
+// Render products list for a category
+function renderProductsList(products, categoryName) {
+    if (products.length === 0) {
+        return '<p style="color: #999; font-style: italic; padding: 10px;">No products in this category</p>';
+    }
+    
+    return `
+        <div class="products-sortable" data-category="${categoryName}">
+            ${products.map((product, index) => `
+                <div class="product-row" data-product-id="${product.id}" data-product-name="${product.name}">
+                    <div class="product-drag-handle">⋮⋮</div>
+                    <div class="product-info">
+                        <img src="${product.image || 'images/placeholder.png'}" alt="${product.name}" class="product-thumbnail">
+                        <span class="product-name">${product.name}</span>
+                        <span class="product-status ${product.status || 'available'}">${(product.status || 'available').toUpperCase()}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Initialize dnd-kit for categories and products
+function initializeDNDKit() {
+    // This function is no longer needed as we're using HTML5 drag-and-drop
+    console.log('Using HTML5 drag-and-drop instead of dnd-kit');
+}
+
+// Update category order in Firebase
+async function updateCategoryOrder(categoryId, newOrder) {
+    if (!categoryId || categoryId.startsWith('derived-')) {
+        // Skip derived categories (not in Firestore)
+        return;
+    }
+    
+    try {
+        await db.collection("categories").doc(categoryId).update({
+            order: newOrder,
+            updatedAt: new Date()
         });
+        console.log(`✅ Updated category ${categoryId} order to ${newOrder}`);
+    } catch (error) {
+        console.error('❌ Error updating category order:', error);
+        showToast('Failed to update category order', 'error');
+    }
+}
+
+// Toggle products list expansion
+function toggleProductsList(categoryName) {
+    const productsList = document.getElementById(`products-${categoryName}`);
+    const button = document.querySelector(`.category-card[data-category-name="${categoryName}"] .btn-view-products`);
+    
+    if (productsList.classList.contains('expanded')) {
+        // Collapse
+        productsList.classList.remove('expanded');
+        button.classList.remove('expanded');
+        button.innerHTML = `📊 View Products (${productsList.querySelectorAll('.product-row').length})`;
+    } else {
+        // Collapse all other expanded lists first
+        document.querySelectorAll('.category-products-list.expanded').forEach(list => {
+            list.classList.remove('expanded');
+        });
+        document.querySelectorAll('.btn-view-products.expanded').forEach(btn => {
+            btn.classList.remove('expanded');
+            const count = btn.closest('.category-card').querySelector('.category-products-list').querySelectorAll('.product-row').length;
+            btn.innerHTML = `📊 View Products (${count})`;
+        });
+        
+        // Expand this one
+        productsList.classList.add('expanded');
+        button.classList.add('expanded');
+        button.innerHTML = `📊 Hide Products (${productsList.querySelectorAll('.product-row').length})`;
+        
+        // Initialize products dnd-kit for this category
+        initializeProductsDND(categoryName);
+    }
+}
+
+// Initialize products dnd-kit for a specific category
+function initializeProductsDND(categoryName) {
+    const productsContainer = document.querySelector(`.products-sortable[data-category="${categoryName}"]`);
+    if (!productsContainer) return;
+    
+    const productRows = productsContainer.querySelectorAll('.product-row');
+    
+    let draggedProduct = null;
+    let draggedProductData = null;
+    
+    productRows.forEach(row => {
+        row.addEventListener('dragstart', handleProductDragStart);
+        row.addEventListener('dragend', handleProductDragEnd);
+        row.addEventListener('dragover', handleProductDragOver);
+        row.addEventListener('drop', handleProductDrop);
+        row.addEventListener('dragenter', handleProductDragEnter);
+        row.addEventListener('dragleave', handleProductDragLeave);
     });
+    
+    function handleProductDragStart(e) {
+        draggedProduct = this;
+        draggedProductData = {
+            productId: this.dataset.productId,
+            productName: this.dataset.productName
+        };
+        
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        
+        console.log('🎯 Started dragging product:', draggedProductData.productName);
+    }
+    
+    function handleProductDragEnd(e) {
+        this.classList.remove('dragging');
+        
+        // Remove all drag-over classes
+        productRows.forEach(row => {
+            row.classList.remove('drag-over');
+        });
+        
+        draggedProduct = null;
+        draggedProductData = null;
+    }
+    
+    function handleProductDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleProductDragEnter(e) {
+        if (this !== draggedProduct) {
+            this.classList.add('drag-over');
+        }
+    }
+    
+    function handleProductDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+    
+    async function handleProductDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        
+        if (draggedProduct !== this) {
+            console.log('🔄 Dropped product:', draggedProductData.productName, 'onto:', this.dataset.productName);
+            
+            // Get all product rows in this category
+            const allProductRows = Array.from(productsContainer.querySelectorAll('.product-row'));
+            const draggedIndex = allProductRows.indexOf(draggedProduct);
+            const targetIndex = allProductRows.indexOf(this);
+            
+            // Reorder the array
+            if (draggedIndex < targetIndex) {
+                // Moving down
+                this.parentNode.insertBefore(draggedProduct, this.nextSibling);
+            } else {
+                // Moving up
+                this.parentNode.insertBefore(draggedProduct, this);
+            }
+            
+            // Update order values for all products in this category
+            const reorderedProductRows = Array.from(productsContainer.querySelectorAll('.product-row'));
+            const newProductOrder = [];
+            
+            reorderedProductRows.forEach((row, index) => {
+                const productId = row.dataset.productId;
+                row.dataset.order = index;
+                newProductOrder.push(productId);
+                
+                // Update Firebase
+                updateProductOrder(productId, index);
+            });
+            
+            showToast('Product order updated successfully!', 'success');
+        }
+        
+        return false;
+    }
+}
+
+// Update product order in Firebase
+async function updateProductOrder(productId, newOrder) {
+    try {
+        await db.collection("products").doc(productId).update({
+            order: newOrder,
+            updatedAt: new Date()
+        });
+        console.log(`✅ Updated product ${productId} order to ${newOrder}`);
+    } catch (error) {
+        console.error('❌ Error updating product order:', error);
+        showToast('Failed to update product order', 'error');
+    }
 }
 
 // Update shared categories file for website sync
