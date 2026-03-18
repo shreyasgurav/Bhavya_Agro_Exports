@@ -374,31 +374,8 @@
     </div>
     <a href="products.html" class="btn-text reveal">View All Products</a>
   </div>
-  <div class="feat-cats-grid" style="margin-top:48px;">
-    <a href="products.html" class="cat-card reveal">
-      <img src="images/b-safflower.png" alt="Premium Oils"/>
-      <div class="cat-card-overlay"></div>
-      <div class="cat-card-body">
-        <span class="cat-card-label">Our Products 01</span>
-        <div class="cat-card-name">Premium Edible Oils</div>
-      </div>
-    </a>
-    <a href="products.html" class="cat-card reveal reveal-delay-1">
-      <img src="images/basmati-rice.jpg" alt="Grains & Sugar"/>
-      <div class="cat-card-overlay"></div>
-      <div class="cat-card-body">
-        <span class="cat-card-label">Our Products 02</span>
-        <div class="cat-card-name">Wholesome Grains & Sugar</div>
-      </div>
-    </a>
-    <a href="products.html" class="cat-card reveal reveal-delay-1">
-      <img src="images/cotton-oil-cake.webp" alt="Oil Seed Cakes"/>
-      <div class="cat-card-overlay"></div>
-      <div class="cat-card-body">
-        <span class="cat-card-label">Our Products 03</span>
-        <div class="cat-card-name">Nutritional Oil Seed Cakes</div>
-      </div>
-    </a>
+  <div class="feat-cats-grid" style="margin-top:48px;" id="categories-grid">
+    <!-- Categories will be dynamically loaded here -->
   </div>
 </section>
 
@@ -475,9 +452,136 @@
 
 <div id="footer-placeholder"></div>
 <script src="js/main.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script>
   loadComponent('nav-placeholder', 'components/nav.html');
   loadComponent('footer-placeholder', 'components/footer.html');
+  
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDDgkJZA6BpTYLoCfVFdcvHbLzp6D_0bU4",
+    authDomain: "bhavya-agro-d3407.firebaseapp.com",
+    projectId: "bhavya-agro-d3407",
+    storageBucket: "bhavya-agro-d3407.appspot.com",
+    messagingSenderId: "701815969630",
+    appId: "1:701815969630:web:d38ef87a8204b72f2f61cf",
+    measurementId: "G-GMV0NN4VKR"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
+  // Load categories dynamically
+  async function loadCategories() {
+    const container = document.getElementById('categories-grid');
+    if (!container) return;
+    
+    try {
+      const categoriesSnapshot = await db.collection('categories').orderBy('order', 'asc').get();
+      const categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Default order if no categories in Firestore
+      const defaultCategories = [
+        { name: 'oils', displayName: 'Premium Edible Oils', image: 'images/b-safflower.png', order: 0 },
+        { name: 'grains', displayName: 'Wholesome Grains & Sugar', image: 'images/basmati-rice.jpg', order: 1 },
+        { name: 'cakes', displayName: 'Nutritional Oil Seed Cakes', image: 'images/cotton-oil-cake.webp', order: 2 }
+      ];
+      
+      const categoriesToDisplay = categories.length > 0 ? categories : defaultCategories;
+      
+      container.innerHTML = '';
+      
+      categoriesToDisplay.forEach((category, index) => {
+        const displayName = category.displayName || getCategoryDisplayName(category.name);
+        const image = category.image || getDefaultImage(category.name);
+        const delayClass = index > 0 ? `reveal reveal-delay-${index}` : 'reveal';
+        
+        const categoryCard = document.createElement('a');
+        categoryCard.href = 'products.html';
+        categoryCard.className = `cat-card ${delayClass}`;
+        categoryCard.innerHTML = `
+          <img src="${image}" alt="${displayName}"/>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-body">
+            <span class="cat-card-label">Our Products 0${index + 1}</span>
+            <div class="cat-card-name">${displayName}</div>
+          </div>
+        `;
+        
+        container.appendChild(categoryCard);
+      });
+      
+      console.log('✅ Categories loaded from Firebase:', categoriesToDisplay.map(c => c.displayName || c.name));
+      
+    } catch (error) {
+      console.error('❌ Error loading categories:', error);
+      // Fallback to static categories
+      loadFallbackCategories();
+    }
+  }
+  
+  function getCategoryDisplayName(categoryName) {
+    const mapping = {
+      'oils': 'Premium Edible Oils',
+      'grains': 'Wholesome Grains & Sugar',
+      'cakes': 'Nutritional Oil Seed Cakes'
+    };
+    return mapping[categoryName] || categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+  }
+  
+  function getDefaultImage(categoryName) {
+    const mapping = {
+      'oils': 'images/b-safflower.png',
+      'grains': 'images/basmati-rice.jpg',
+      'cakes': 'images/cotton-oil-cake.webp'
+    };
+    return mapping[categoryName] || 'images/b-safflower.png';
+  }
+  
+  function loadFallbackCategories() {
+    const container = document.getElementById('categories-grid');
+    const fallbackHTML = `
+      <a href="products.html" class="cat-card reveal">
+        <img src="images/b-safflower.png" alt="Premium Edible Oils"/>
+        <div class="cat-card-overlay"></div>
+        <div class="cat-card-body">
+          <span class="cat-card-label">Our Products 01</span>
+          <div class="cat-card-name">Premium Edible Oils</div>
+        </div>
+      </a>
+      <a href="products.html" class="cat-card reveal reveal-delay-1">
+        <img src="images/basmati-rice.jpg" alt="Wholesome Grains & Sugar"/>
+        <div class="cat-card-overlay"></div>
+        <div class="cat-card-body">
+          <span class="cat-card-label">Our Products 02</span>
+          <div class="cat-card-name">Wholesome Grains & Sugar</div>
+        </div>
+      </a>
+      <a href="products.html" class="cat-card reveal reveal-delay-1">
+        <img src="images/cotton-oil-cake.webp" alt="Nutritional Oil Seed Cakes"/>
+        <div class="cat-card-overlay"></div>
+        <div class="cat-card-body">
+          <span class="cat-card-label">Our Products 03</span>
+          <div class="cat-card-name">Nutritional Oil Seed Cakes</div>
+        </div>
+      </a>
+    `;
+    container.innerHTML = fallbackHTML;
+  }
+  
+  // Load categories when page loads
+  document.addEventListener('DOMContentLoaded', loadCategories);
+  
+  // Listen for category order changes from admin panel
+  if (typeof BroadcastChannel !== 'undefined') {
+    const channel = new BroadcastChannel('category-order');
+    channel.addEventListener('message', (event) => {
+      if (event.data.type === 'category-order-changed') {
+        console.log('📡 Received category order change, reloading categories...');
+        loadCategories();
+      }
+    });
+  }
   
   // Initialize Boxicons
   if (typeof boxicons !== 'undefined') boxicons.init();

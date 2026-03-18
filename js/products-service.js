@@ -37,9 +37,31 @@ export function sortProducts(list) {
 
 export async function fetchAllProducts() {
   try {
-    const snap = await getDocs(collection(db, COLLECTION));
-    if (!snap.empty) {
-      return sortProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    // Fetch both products and categories to apply proper ordering
+    const [productsSnap, categoriesSnap] = await Promise.all([
+      getDocs(collection(db, COLLECTION)),
+      getDocs(collection(db, 'categories'))
+    ]);
+    
+    if (!productsSnap.empty) {
+      const products = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Apply category order if categories exist
+      if (!categoriesSnap.empty) {
+        const categories = categoriesSnap.docs.map(d => d.data());
+        const categoryOrderMap = {};
+        
+        categories.forEach(cat => {
+          categoryOrderMap[cat.name] = cat.order || 999;
+        });
+        
+        // Apply category order to products
+        products.forEach(product => {
+          product.categoryOrder = categoryOrderMap[product.category] || 999;
+        });
+      }
+      
+      return sortProducts(products);
     }
     return sortProducts([...FALLBACK_PRODUCTS]);
   } catch (err) {

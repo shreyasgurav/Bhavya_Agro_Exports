@@ -254,6 +254,160 @@ function loadProducts() {
     });
 }
 
+// Initialize drag and drop functionality
+function initializeDragAndDrop() {
+    const cards = document.querySelectorAll('.category-card');
+    const grid = document.querySelector('.categories-grid');
+    
+    let draggedElement = null;
+    let draggedData = null;
+    
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragenter', handleDragEnter);
+        card.addEventListener('dragleave', handleDragLeave);
+    });
+    
+    function handleDragStart(e) {
+        draggedElement = this;
+        draggedData = {
+            categoryId: this.dataset.categoryId,
+            categoryName: this.dataset.categoryName,
+            order: parseInt(this.dataset.order)
+        };
+        
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        
+        console.log('🎯 Started dragging:', draggedData.categoryName);
+    }
+    
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        
+        // Remove all drag-over classes
+        cards.forEach(card => {
+            card.classList.remove('drag-over');
+        });
+        
+        draggedElement = null;
+        draggedData = null;
+    }
+    
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDragEnter(e) {
+        if (this !== draggedElement) {
+            this.classList.add('drag-over');
+        }
+    }
+    
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+    
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        
+        if (draggedElement !== this) {
+            // Get the drop target data
+            const targetData = {
+                categoryId: this.dataset.categoryId,
+                categoryName: this.dataset.categoryName,
+                order: parseInt(this.dataset.order)
+            };
+            
+            console.log('🔄 Dropped:', draggedData.categoryName, 'onto:', targetData.categoryName);
+            
+            // Swap the visual positions
+            const draggedHTML = draggedElement.innerHTML;
+            const targetHTML = this.innerHTML;
+            
+            draggedElement.innerHTML = targetHTML;
+            this.innerHTML = draggedHTML;
+            
+            // Swap the data attributes
+            const draggedCategoryId = draggedElement.dataset.categoryId;
+            const draggedCategoryName = draggedElement.dataset.categoryName;
+            const draggedOrder = draggedElement.dataset.order;
+            
+            draggedElement.dataset.categoryId = this.dataset.categoryId;
+            draggedElement.dataset.categoryName = this.dataset.categoryName;
+            draggedElement.dataset.order = this.dataset.order;
+            
+            this.dataset.categoryId = draggedCategoryId;
+            this.dataset.categoryName = draggedCategoryName;
+            this.dataset.order = draggedOrder;
+            
+            // Update the order in Firebase
+            updateCategoryOrder(draggedData.categoryId, targetData.order);
+            updateCategoryOrder(targetData.categoryId, draggedData.order);
+            
+            // Show success message
+            showToast('Category order updated successfully!', 'success');
+            
+            // Broadcast the change to other tabs
+            broadcastCategoryOrderChange();
+        }
+        
+        return false;
+    }
+}
+
+// Update category order in Firebase
+async function updateCategoryOrder(categoryId, newOrder) {
+    if (!categoryId || categoryId.startsWith('derived-')) {
+        // Skip derived categories (not in Firestore)
+        return;
+    }
+    
+    try {
+        await db.collection("categories").doc(categoryId).update({
+            order: newOrder,
+            updatedAt: new Date()
+        });
+        console.log(`✅ Updated category ${categoryId} order to ${newOrder}`);
+    } catch (error) {
+        console.error('❌ Error updating category order:', error);
+        showToast('Failed to update category order', 'error');
+    }
+}
+
+// Broadcast category order changes to other tabs
+function broadcastCategoryOrderChange() {
+    if (typeof BroadcastChannel !== 'undefined') {
+        const channel = new BroadcastChannel('category-order');
+        channel.postMessage({
+            type: 'category-order-changed',
+            timestamp: Date.now()
+        });
+    }
+}
+
+// Listen for category order changes from other tabs
+if (typeof BroadcastChannel !== 'undefined') {
+    const channel = new BroadcastChannel('category-order');
+    channel.addEventListener('message', (event) => {
+        if (event.data.type === 'category-order-changed') {
+            console.log('📡 Received category order change from another tab');
+            loadCategories(); // Refresh categories
+        }
+    });
+}
+
 // Map internal category names to website display names
 function getCategoryDisplayName(categoryName) {
     const categoryMapping = {
@@ -282,46 +436,67 @@ function loadCategories() {
             const products = productsSnapshot.docs.map(doc => doc.data());
             const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
             
+            // Define the website order
+            const websiteOrder = ['oils', 'grains', 'cakes'];
+            
+            // Combine categories with proper ordering
+            let allCategories = [];
+            
+            // Add Firestore categories first
+            categories.filter(cat => cat && cat.name).forEach(category => {
+                allCategories.push({
+                    id: category.id,
+                    name: category.name,
+                    description: category.description,
+                    order: category.order || websiteOrder.indexOf(category.name) || 999,
+                    isFirestore: true
+                });
+            });
+            
+            // Add product-derived categories
+            uniqueCategories
+                .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null')
+                .filter(cat => !categories.some(c => c.name === cat))
+                .forEach(categoryName => {
+                    allCategories.push({
+                        id: null,
+                        name: categoryName,
+                        description: null,
+                        order: websiteOrder.indexOf(categoryName) || 999,
+                        isFirestore: false
+                    });
+                });
+            
+            // Sort by order, then by name
+            allCategories.sort((a, b) => {
+                if (a.order !== b.order) return a.order - b.order;
+                return a.name.localeCompare(b.name);
+            });
+            
             let html = '<div class="categories-grid">';
             
-            // Add categories from Firestore
-            categories.filter(cat => cat && cat.name).forEach(category => {
+            allCategories.forEach((category, index) => {
                 const productCount = products.filter(p => p.category === category.name).length;
-                // Map category names to match website display names
                 const displayName = getCategoryDisplayName(category.name);
+                
                 html += `
-                    <div class="category-card">
+                    <div class="category-card" draggable="true" data-category-id="${category.id || 'derived-' + category.name}" data-category-name="${category.name}" data-order="${category.order}">
+                        <div class="drag-handle">⋮⋮</div>
                         <h3>${displayName}</h3>
                         <p>${category.description || 'No description'}</p>
                         <div class="category-actions">
-                            <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                            <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')" ${!category.isFirestore ? 'disabled' : ''}>🗑 Delete</button>
                             <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
                         </div>
                     </div>
                 `;
             });
             
-            // Add categories derived from products
-            uniqueCategories
-                .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null')
-                .filter(cat => !categories.some(c => c.name === cat))
-                .forEach(categoryName => {
-                    const productCount = products.filter(p => p.category === categoryName).length;
-                    const displayName = getCategoryDisplayName(categoryName);
-                    html += `
-                        <div class="category-card">
-                            <h3>${displayName}</h3>
-                            <p><em>Products in this category: ${productCount}</em></p>
-                            <div class="category-actions">
-                                <button class="action-btn btn-delete" disabled>🗑 Delete</button>
-                                <button class="action-btn btn-view-products" disabled>📊 View Products (${productCount})</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            
             html += '</div>';
             container.innerHTML = html;
+            
+            // Add drag and drop event listeners
+            initializeDragAndDrop();
             
             // Update category select in product modal
             updateCategorySelect();

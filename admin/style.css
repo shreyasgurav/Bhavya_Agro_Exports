@@ -362,9 +362,42 @@ tr:hover td {
     background: var(--white);
     padding: 24px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #EEEEEE;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     transition: transform 0.2s, box-shadow 0.2s;
+    cursor: move;
+    position: relative;
+}
+
+.category-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.category-card.drag-over {
+    border: 2px dashed var(--gold);
+    background: var(--pale-gold);
+}
+
+.category-card.drag-handle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--grey);
+    cursor: grab;
+    font-size: 18px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.category-card.drag-handle:hover {
+    color: var(--gold);
+    background: var(--pale-gold);
+}
+
+.category-card.drag-handle:active {
+    cursor: grabbing;
 }
 
 .category-card:hover {
