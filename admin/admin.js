@@ -254,6 +254,17 @@ function loadProducts() {
     });
 }
 
+// Map internal category names to website display names
+function getCategoryDisplayName(categoryName) {
+    const categoryMapping = {
+        'oils': 'Premium Edible Oils',
+        'grains': 'Wholesome Grains & Sugar',
+        'cakes': 'Nutritional Oil Seed Cakes'
+    };
+    
+    return categoryMapping[categoryName] || categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+}
+
 // Load categories
 function loadCategories() {
     const container = document.getElementById('categories-container');
@@ -276,9 +287,11 @@ function loadCategories() {
             // Add categories from Firestore
             categories.filter(cat => cat && cat.name).forEach(category => {
                 const productCount = products.filter(p => p.category === category.name).length;
+                // Map category names to match website display names
+                const displayName = getCategoryDisplayName(category.name);
                 html += `
                     <div class="category-card">
-                        <h3>${category.name}</h3>
+                        <h3>${displayName}</h3>
                         <p>${category.description || 'No description'}</p>
                         <div class="category-actions">
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
@@ -294,9 +307,10 @@ function loadCategories() {
                 .filter(cat => !categories.some(c => c.name === cat))
                 .forEach(categoryName => {
                     const productCount = products.filter(p => p.category === categoryName).length;
+                    const displayName = getCategoryDisplayName(categoryName);
                     html += `
                         <div class="category-card">
-                            <h3>${categoryName}</h3>
+                            <h3>${displayName}</h3>
                             <p><em>Products in this category: ${productCount}</em></p>
                             <div class="category-actions">
                                 <button class="action-btn btn-delete" disabled>🗑 Delete</button>
@@ -637,7 +651,7 @@ function updateCategorySelect() {
         allCategories.forEach(categoryName => {
             const option = document.createElement('option');
             option.value = categoryName;
-            option.textContent = categoryName;
+            option.textContent = getCategoryDisplayName(categoryName);
             select.appendChild(option);
         });
         
@@ -649,7 +663,7 @@ function updateCategorySelect() {
         fallbackCategories.forEach(categoryName => {
             const option = document.createElement('option');
             option.value = categoryName;
-            option.textContent = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+            option.textContent = getCategoryDisplayName(categoryName);
             select.appendChild(option);
         });
     });
