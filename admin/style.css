@@ -217,7 +217,7 @@ body {
 
 .count-badge {
     background: var(--gold);
-    color: var(--white);
+    color: var(--earth);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
@@ -319,8 +319,15 @@ tr:hover td {
 
 .btn-reopen {
     background: var(--gold);
-    color: var(--white);
+    color: var(--earth);
     border-color: var(--gold);
+    font-weight: 600;
+}
+
+.btn-reopen:hover {
+    background: var(--earth);
+    color: var(--white);
+    border-color: var(--earth);
 }
 
 .btn-delete {
@@ -815,10 +822,11 @@ td {
 
 .toast {
     background: var(--gold);
-    color: var(--white);
+    color: var(--earth);
     padding: 12px 20px;
     border-radius: 8px;
     margin-bottom: 10px;
+    font-weight: 500;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     animation: slideInRight 0.3s ease;
     min-width: 200px;
@@ -826,14 +834,17 @@ td {
 
 .toast.success {
     background: var(--green);
+    color: var(--white);
 }
 
 .toast.error {
     background: var(--red);
+    color: var(--white);
 }
 
 .toast.warning {
     background: #C9973A;
+    color: var(--white);
 }
 
 @keyframes slideInRight {
