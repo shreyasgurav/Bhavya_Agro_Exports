@@ -306,9 +306,15 @@ tr:hover td {
 }
 
 .btn-done {
-    background: var(--green);
+    background: var(--white);
+    color: var(--earth);
+    border: 2px solid var(--earth);
+    font-weight: 600;
+}
+
+.btn-done:hover {
+    background: var(--earth);
     color: var(--white);
-    border-color: var(--green);
 }
 
 .btn-reopen {
@@ -326,6 +332,16 @@ tr:hover td {
 .btn-delete:hover {
     background: #C62828;
     border-color: #C62828;
+}
+
+/* Strikethrough for completed contacts */
+.contact-completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.contact-completed td {
+    color: #999;
 }
 
 /* CATEGORIES GRID */

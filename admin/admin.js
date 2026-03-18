@@ -177,7 +177,7 @@ function loadInbox() {
             const date = inquiry.timestamp ? inquiry.timestamp.toDate().toLocaleDateString() : '---';
             
             html += `
-                <tr>
+                <tr class="${!isNew ? 'contact-completed' : ''}">
                     <td>${inquiry.name || 'Anonymous'}</td>
                     <td>${inquiry.city || '---'}</td>
                     <td>${inquiry.phone || '---'}</td>
@@ -300,7 +300,7 @@ function loadCategories() {
                             <p><em>Products in this category: ${products.filter(p => p.category === categoryName).length}</em></p>
                             <div class="category-actions">
                                 <button class="action-btn btn-delete" disabled>� Delete</button>
-                                <button class="action-btn btn-view-products" disabled>�📊 View Products (${products.filter(p => p.category === categoryName).length})</button>
+                                <button class="action-btn btn-view-products" disabled>�� View Products (${products.filter(p => p.category === categoryName).length})</button>
                             </div>
                         </div>
                     `;
@@ -898,7 +898,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // CRUD operations
 window.toggleStatus = function(id, currentStatus) {
     const nextStatus = currentStatus === 'new' ? 'done' : 'new';
-    db.collection("contacts").doc(id).update({ status: nextStatus });
+    db.collection("contacts").doc(id).update({ status: nextStatus }).then(() => {
+        console.log(`✅ Contact status updated to ${nextStatus}`);
+        // Refresh the inbox to show the strikethrough effect
+        loadInbox();
+    }).catch(error => {
+        console.error('❌ Error updating contact status:', error);
+    });
 };
 
 window.deleteInquiry = function(id, name) {
