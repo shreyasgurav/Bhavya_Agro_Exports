@@ -278,27 +278,29 @@ function loadCategories() {
             let html = '<div class="categories-grid">';
             
             // Add categories from Firestore
-            categories.forEach(category => {
+            categories.filter(cat => cat && cat.name).forEach(category => {
                 html += `
                     <div class="category-card">
                         <h3>${category.name}</h3>
                         <p>${category.description || 'No description'}</p>
                         <div class="category-actions">
                             <button class="action-btn btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑 Delete</button>
+                            <button class="action-btn btn-view-products" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
                         </div>
                     </div>
                 `;
             });
             
             // Add categories derived from products
-            uniqueCategories.forEach(category => {
-                if (!categories.some(c => c.name === category.name)) {
+            uniqueCategories.filter(cat => cat && cat.trim()).forEach(categoryName => {
+                if (!categories.some(c => c.name === categoryName)) {
                     html += `
                         <div class="category-card">
-                            <h3>${category.name}</h3>
-                            <p><em>Products in this category: ${products.filter(p => p.category === category.name).length}</em></p>
+                            <h3>${categoryName}</h3>
+                            <p><em>Products in this category: ${products.filter(p => p.category === categoryName).length}</em></p>
                             <div class="category-actions">
-                                <button class="action-btn" disabled>📊 View Products (${products.filter(p => p.category === category.name).length})</button>
+                                <button class="action-btn btn-delete" disabled>� Delete</button>
+                                <button class="action-btn btn-view-products" disabled>�📊 View Products (${products.filter(p => p.category === categoryName).length})</button>
                             </div>
                         </div>
                     `;
